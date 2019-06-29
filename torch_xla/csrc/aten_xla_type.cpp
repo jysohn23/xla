@@ -1000,13 +1000,19 @@ at::Tensor AtenXlaType::dot(const at::Tensor& self, const at::Tensor& tensor) {
 }
 
 at::Tensor AtenXlaType::dropout(const at::Tensor& input, double p,
-                                bool /* train */) {
+                                bool train) {
+  if (!train) {
+    return input;
+  }
   return bridge::AtenFromXlaTensor(
       XLATensor::dropout(bridge::GetXlaTensor(input), p));
 }
 
 at::Tensor& AtenXlaType::dropout_(at::Tensor& self, double p,
-                                  bool /* train */) {
+                                  bool train) {
+  if (!train) {
+    return self;
+  }
   XLATensor self_tensor = bridge::GetXlaTensor(self);
   XLATensor::dropout_(self_tensor, p);
   return self;

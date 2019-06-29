@@ -92,6 +92,7 @@ def train_mnist():
   model_parallel = dp.DataParallel(MNIST, device_ids=devices)
 
   def train_loop_fn(model, loader, device, context):
+    model.train()
     loss_fn = nn.NLLLoss()
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=FLAGS.momentum)
     tracker = xm.RateTracker()
@@ -108,6 +109,7 @@ def train_mnist():
                                                         tracker.rate()))
 
   def test_loop_fn(model, loader, device, context):
+    model.eval()
     total_samples = 0
     correct = 0
     for x, (data, target) in loader:
@@ -120,8 +122,10 @@ def train_mnist():
                                          100.0 * correct / total_samples))
     return correct / total_samples
 
+
   accuracy = 0.0
   for epoch in range(1, FLAGS.num_epochs + 1):
+    print("Begin epoch: {}".format(epoch))
     model_parallel(train_loop_fn, train_loader)
     accuracies = model_parallel(test_loop_fn, test_loader)
     accuracy = sum(accuracies) / len(devices)

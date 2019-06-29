@@ -134,6 +134,7 @@ def train_imagenet():
   model_parallel = dp.DataParallel(torchvision_model, device_ids=devices)
 
   def train_loop_fn(model, loader, device, context):
+    model.train()
     loss_fn = nn.CrossEntropyLoss()
     optimizer = optim.SGD(
         model.parameters(),
@@ -153,6 +154,7 @@ def train_imagenet():
                                                         tracker.rate()))
 
   def test_loop_fn(model, loader, device, context):
+    model.eval()
     total_samples = 0
     correct = 0
     for x, (data, target) in loader:
