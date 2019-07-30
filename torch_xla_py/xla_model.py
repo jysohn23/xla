@@ -289,8 +289,22 @@ class ToXlaTensorArena(object):
 
   def transform(self, inputs):
     self._tensors = []
+    #import pdb; pdb.set_trace()
+    import os
+    import psutil
+    process = psutil.Process(os.getpid())
+#    print('A: {} Gb'.format(
+#        process.memory_info().rss / float(1024*1024*1024)))
+
     self._collect_tensors(inputs)
+#    print('B:: {} Gb'.format(
+#        process.memory_info().rss / float(1024*1024*1024)))
+
     self._convert()
+    # NOTE: memory usage increases @ self._convert()
+#    print('C: {} Gb'.format(
+#        process.memory_info().rss / float(1024*1024*1024)))
+
     return self._replace_tensors(inputs)
 
 

@@ -1,0 +1,528 @@
+2019-07-30 00:09:07.900858: I tensorflow/compiler/xla/xla_client/xrt_computation_client.cc:196] XRT device (LOCAL) CPU:0 -> /job:tpu_worker/replica:0/task:0/device:XLA_CPU:0
+2019-07-30 00:09:07.900920: I tensorflow/compiler/xla/xla_client/xrt_computation_client.cc:196] XRT device (LOCAL) TPU:0 -> /job:tpu_worker/replica:0/task:0/device:TPU:0
+2019-07-30 00:09:07.900927: I tensorflow/compiler/xla/xla_client/xrt_computation_client.cc:196] XRT device (LOCAL) TPU:1 -> /job:tpu_worker/replica:0/task:0/device:TPU:1
+2019-07-30 00:09:07.900932: I tensorflow/compiler/xla/xla_client/xrt_computation_client.cc:196] XRT device (LOCAL) TPU:2 -> /job:tpu_worker/replica:0/task:0/device:TPU:2
+2019-07-30 00:09:07.900936: I tensorflow/compiler/xla/xla_client/xrt_computation_client.cc:196] XRT device (LOCAL) TPU:3 -> /job:tpu_worker/replica:0/task:0/device:TPU:3
+2019-07-30 00:09:07.900941: I tensorflow/compiler/xla/xla_client/xrt_computation_client.cc:196] XRT device (LOCAL) TPU:4 -> /job:tpu_worker/replica:0/task:0/device:TPU:4
+2019-07-30 00:09:07.900948: I tensorflow/compiler/xla/xla_client/xrt_computation_client.cc:196] XRT device (LOCAL) TPU:5 -> /job:tpu_worker/replica:0/task:0/device:TPU:5
+2019-07-30 00:09:07.900953: I tensorflow/compiler/xla/xla_client/xrt_computation_client.cc:196] XRT device (LOCAL) TPU:6 -> /job:tpu_worker/replica:0/task:0/device:TPU:6
+2019-07-30 00:09:07.900958: I tensorflow/compiler/xla/xla_client/xrt_computation_client.cc:196] XRT device (LOCAL) TPU:7 -> /job:tpu_worker/replica:0/task:0/device:TPU:7
+2019-07-30 00:09:07.900974: I tensorflow/compiler/xla/xla_client/xrt_computation_client.cc:200] Worker grpc://10.7.7.2:8470 for /job:tpu_worker/replica:0/task:0
+2019-07-30 00:09:07.900979: I tensorflow/compiler/xla/xla_client/xrt_computation_client.cc:204] XRT default device: TPU:0
+2019-07-30 00:09:07.900998: I tensorflow/compiler/xla/xla_client/xrt_computation_client.cc:1082] Configuring TPU for worker tpu_worker:0 at grpc://10.7.7.2:8470
+2019-07-30 00:09:13.740200: I tensorflow/compiler/xla/xla_client/xrt_computation_client.cc:1093] TPU topology: mesh_shape: 2
+mesh_shape: 2
+mesh_shape: 2
+num_tasks: 1
+num_tpu_devices_per_task: 8
+device_coordinates: 0
+device_coordinates: 0
+device_coordinates: 0
+device_coordinates: 0
+device_coordinates: 0
+device_coordinates: 1
+device_coordinates: 0
+device_coordinates: 1
+device_coordinates: 0
+device_coordinates: 0
+device_coordinates: 1
+device_coordinates: 1
+device_coordinates: 1
+device_coordinates: 0
+device_coordinates: 0
+device_coordinates: 1
+device_coordinates: 0
+device_coordinates: 1
+device_coordinates: 1
+device_coordinates: 1
+device_coordinates: 0
+device_coordinates: 1
+device_coordinates: 1
+device_coordinates: 1
+
+==> Preparing data..
+[xla:5](0) Loss=6.89059 Rate=2.73
+[xla:1](0) Loss=6.89059 Rate=2.70
+[xla:8](0) Loss=6.89059 Rate=2.78
+[xla:6](0) Loss=6.89059 Rate=2.73
+[xla:7](0) Loss=6.89059 Rate=2.74
+[xla:4](0) Loss=6.89059 Rate=2.74
+[xla:3](0) Loss=6.89059 Rate=2.72
+[xla:2](0) Loss=6.89059 Rate=2.71
+[xla:5](20) Loss=0.03099 Rate=276.62
+[xla:2](20) Loss=0.03099 Rate=277.40
+[xla:8](20) Loss=0.03099 Rate=276.05
+[xla:7](20) Loss=0.03099 Rate=276.35
+[xla:1](20) Loss=0.03099 Rate=276.58
+[xla:3](20) Loss=0.03099 Rate=276.44
+[xla:4](20) Loss=0.03099 Rate=277.75
+[xla:6](20) Loss=0.03099 Rate=279.80
+[xla:8](40) Loss=0.00082 Rate=300.97
+[xla:7](40) Loss=0.00082 Rate=303.68
+[xla:4](40) Loss=0.00082 Rate=306.05
+[xla:1](40) Loss=0.00082 Rate=300.85
+[xla:6](40) Loss=0.00082 Rate=299.88
+[xla:3](40) Loss=0.00082 Rate=299.69
+[xla:2](40) Loss=0.00082 Rate=300.19
+[xla:5](40) Loss=0.00082 Rate=299.59
+[xla:5](60) Loss=0.00059 Rate=322.06
+[xla:6](60) Loss=0.00059 Rate=336.58
+[xla:8](60) Loss=0.00059 Rate=323.18
+[xla:3](60) Loss=0.00059 Rate=322.04
+[xla:2](60) Loss=0.00059 Rate=337.26
+[xla:1](60) Loss=0.00059 Rate=322.52
+[xla:4](60) Loss=0.00059 Rate=322.65
+[xla:7](60) Loss=0.00059 Rate=321.42
+[xla:7](80) Loss=0.00063 Rate=265.53
+[xla:5](80) Loss=0.00063 Rate=265.65
+[xla:1](80) Loss=0.00063 Rate=264.98
+[xla:8](80) Loss=0.00063 Rate=265.69
+[xla:4](80) Loss=0.00063 Rate=264.86
+[xla:3](80) Loss=0.00063 Rate=264.62
+[xla:6](80) Loss=0.00063 Rate=267.02
+[xla:2](80) Loss=0.00063 Rate=264.46
+[xla:6](100) Loss=0.00071 Rate=320.30
+[xla:2](100) Loss=0.00071 Rate=329.42
+[xla:4](100) Loss=0.00071 Rate=329.08
+[xla:5](100) Loss=0.00071 Rate=335.01
+[xla:7](100) Loss=0.00071 Rate=329.82
+[xla:3](100) Loss=0.00071 Rate=330.38
+[xla:1](100) Loss=0.00071 Rate=320.12
+[xla:8](100) Loss=0.00071 Rate=328.86
+[xla:4](120) Loss=0.00081 Rate=349.68
+[xla:8](120) Loss=0.00081 Rate=348.20
+[xla:5](120) Loss=0.00081 Rate=352.53
+[xla:1](120) Loss=0.00081 Rate=348.00
+[xla:3](120) Loss=0.00081 Rate=349.68
+[xla:2](120) Loss=0.00081 Rate=347.91
+[xla:6](120) Loss=0.00081 Rate=349.12
+[xla:7](120) Loss=0.00081 Rate=348.70
+[xla:8](140) Loss=0.00092 Rate=314.56
+[xla:7](140) Loss=0.00092 Rate=315.51
+[xla:4](140) Loss=0.00092 Rate=315.00
+[xla:1](140) Loss=0.00092 Rate=325.61
+[xla:5](140) Loss=0.00092 Rate=314.15
+[xla:6](140) Loss=0.00092 Rate=315.22
+[xla:2](140) Loss=0.00092 Rate=314.92
+[xla:3](140) Loss=0.00092 Rate=315.63
+[xla:7](160) Loss=0.00103 Rate=356.56
+[xla:4](160) Loss=0.00103 Rate=356.51
+[xla:8](160) Loss=0.00103 Rate=362.39
+[xla:6](160) Loss=0.00103 Rate=356.43
+[xla:5](160) Loss=0.00103 Rate=361.08
+[xla:2](160) Loss=0.00103 Rate=359.66
+[xla:1](160) Loss=0.00103 Rate=353.15
+[xla:3](160) Loss=0.00103 Rate=357.75
+[xla:6](180) Loss=0.00116 Rate=300.85
+[xla:5](180) Loss=0.00116 Rate=309.43
+[xla:1](180) Loss=0.00116 Rate=303.11
+[xla:7](180) Loss=0.00116 Rate=300.93
+[xla:8](180) Loss=0.00116 Rate=300.62
+[xla:3](180) Loss=0.00116 Rate=301.32
+[xla:4](180) Loss=0.00116 Rate=301.28
+[xla:2](180) Loss=0.00116 Rate=300.28
+[xla:1](200) Loss=0.00130 Rate=306.44
+[xla:2](200) Loss=0.00130 Rate=305.91
+[xla:3](200) Loss=0.00130 Rate=306.53
+[xla:5](200) Loss=0.00130 Rate=320.74
+[xla:7](200) Loss=0.00130 Rate=306.34
+[xla:8](200) Loss=0.00130 Rate=306.71
+[xla:6](200) Loss=0.00130 Rate=306.59
+[xla:4](200) Loss=0.00130 Rate=306.92
+[xla:1](220) Loss=0.00145 Rate=299.22
+[xla:8](220) Loss=0.00145 Rate=300.75
+[xla:7](220) Loss=0.00145 Rate=297.75
+[xla:6](220) Loss=0.00145 Rate=298.61
+[xla:5](220) Loss=0.00145 Rate=312.36
+[xla:4](220) Loss=0.00145 Rate=297.53
+[xla:2](220) Loss=0.00145 Rate=297.69
+[xla:3](220) Loss=0.00145 Rate=298.51
+[xla:3](240) Loss=0.00161 Rate=340.37
+[xla:8](240) Loss=0.00161 Rate=342.49
+[xla:4](240) Loss=0.00161 Rate=340.82
+[xla:5](240) Loss=0.00161 Rate=348.20
+[xla:6](240) Loss=0.00161 Rate=341.71
+[xla:1](240) Loss=0.00161 Rate=341.21
+[xla:7](240) Loss=0.00161 Rate=341.97
+[xla:2](240) Loss=0.00161 Rate=341.61
+[xla:3](260) Loss=0.00178 Rate=320.44
+[xla:7](260) Loss=0.00178 Rate=318.45
+[xla:1](260) Loss=0.00178 Rate=332.19
+[xla:8](260) Loss=0.00178 Rate=321.11
+[xla:2](260) Loss=0.00178 Rate=319.39
+[xla:5](260) Loss=0.00178 Rate=319.45
+[xla:4](260) Loss=0.00178 Rate=318.88
+[xla:6](260) Loss=0.00178 Rate=319.16
+[xla:1](280) Loss=0.00196 Rate=305.44
+[xla:6](280) Loss=0.00196 Rate=301.11
+[xla:3](280) Loss=0.00196 Rate=301.27
+[xla:7](280) Loss=0.00196 Rate=299.95
+[xla:5](280) Loss=0.00196 Rate=308.67
+[xla:2](280) Loss=0.00196 Rate=300.44
+[xla:4](280) Loss=0.00196 Rate=301.10
+[xla:8](280) Loss=0.00196 Rate=303.52
+[xla:2](300) Loss=0.00215 Rate=294.28
+[xla:6](300) Loss=0.00215 Rate=294.50
+[xla:3](300) Loss=0.00215 Rate=294.58
+[xla:5](300) Loss=0.00215 Rate=302.08
+[xla:1](300) Loss=0.00215 Rate=296.85
+[xla:8](300) Loss=0.00215 Rate=294.00
+[xla:7](300) Loss=0.00215 Rate=294.36
+[xla:4](300) Loss=0.00215 Rate=295.79
+[xla:2](320) Loss=0.00235 Rate=291.41
+[xla:6](320) Loss=0.00235 Rate=291.85
+[xla:3](320) Loss=0.00235 Rate=292.28
+[xla:4](320) Loss=0.00235 Rate=290.86
+[xla:8](320) Loss=0.00235 Rate=302.34
+[xla:1](320) Loss=0.00235 Rate=292.37
+[xla:7](320) Loss=0.00235 Rate=291.81
+[xla:5](320) Loss=0.00235 Rate=294.56
+[xla:1](340) Loss=0.00255 Rate=288.14
+[xla:7](340) Loss=0.00255 Rate=288.39
+[xla:6](340) Loss=0.00255 Rate=292.35
+[xla:2](340) Loss=0.00255 Rate=289.67
+[xla:4](340) Loss=0.00255 Rate=287.89
+[xla:3](340) Loss=0.00255 Rate=282.49
+[xla:5](340) Loss=0.00255 Rate=297.18
+[xla:8](340) Loss=0.00255 Rate=287.78
+[xla:7](360) Loss=0.00275 Rate=301.93
+[xla:8](360) Loss=0.00275 Rate=301.25
+[xla:5](360) Loss=0.00275 Rate=319.96
+[xla:1](360) Loss=0.00275 Rate=302.53
+[xla:6](360) Loss=0.00275 Rate=300.94
+[xla:4](360) Loss=0.00275 Rate=301.55
+[xla:3](360) Loss=0.00275 Rate=300.94
+[xla:2](360) Loss=0.00275 Rate=301.21
+[xla:4](380) Loss=0.00296 Rate=323.92
+[xla:2](380) Loss=0.00296 Rate=323.79
+[xla:7](380) Loss=0.00296 Rate=324.47
+[xla:5](380) Loss=0.00296 Rate=341.03
+[xla:6](380) Loss=0.00296 Rate=326.81
+[xla:1](380) Loss=0.00296 Rate=324.75
+[xla:8](380) Loss=0.00296 Rate=324.40
+[xla:3](380) Loss=0.00296 Rate=326.83
+[xla:2](400) Loss=0.00317 Rate=284.22
+[xla:7](400) Loss=0.00317 Rate=283.32
+[xla:4](400) Loss=0.00317 Rate=283.82
+[xla:3](400) Loss=0.00317 Rate=283.89
+[xla:1](400) Loss=0.00317 Rate=285.85
+[xla:8](400) Loss=0.00317 Rate=285.89
+[xla:6](400) Loss=0.00317 Rate=283.33
+[xla:5](400) Loss=0.00317 Rate=294.56
+[xla:3](420) Loss=0.00338 Rate=320.83
+[xla:2](420) Loss=0.00338 Rate=323.41
+[xla:8](420) Loss=0.00338 Rate=326.43
+[xla:7](420) Loss=0.00338 Rate=321.88
+[xla:1](420) Loss=0.00338 Rate=320.96
+[xla:4](420) Loss=0.00338 Rate=320.61
+[xla:5](420) Loss=0.00338 Rate=333.96
+[xla:6](420) Loss=0.00338 Rate=320.95
+[xla:7](440) Loss=0.00358 Rate=292.92
+[xla:2](440) Loss=0.00358 Rate=294.14
+[xla:6](440) Loss=0.00358 Rate=294.32
+[xla:8](440) Loss=0.00358 Rate=294.42
+[xla:3](440) Loss=0.00358 Rate=294.14
+[xla:5](440) Loss=0.00358 Rate=310.78
+[xla:1](440) Loss=0.00358 Rate=293.63
+[xla:4](440) Loss=0.00358 Rate=294.62
+[xla:3](460) Loss=0.00377 Rate=317.39
+[xla:8](460) Loss=0.00377 Rate=318.06
+[xla:2](460) Loss=0.00377 Rate=317.74
+[xla:4](460) Loss=0.00377 Rate=317.08
+[xla:5](460) Loss=0.00377 Rate=331.55
+[xla:7](460) Loss=0.00377 Rate=321.18
+[xla:1](460) Loss=0.00377 Rate=318.27
+[xla:6](460) Loss=0.00377 Rate=317.08
+[xla:6](480) Loss=0.00397 Rate=291.07
+[xla:5](480) Loss=0.00397 Rate=297.12
+[xla:8](480) Loss=0.00397 Rate=291.24
+[xla:1](480) Loss=0.00397 Rate=288.96
+[xla:4](480) Loss=0.00397 Rate=290.81
+[xla:2](480) Loss=0.00397 Rate=291.15
+[xla:3](480) Loss=0.00397 Rate=284.23
+[xla:7](480) Loss=0.00397 Rate=290.93
+[xla:5](500) Loss=0.00415 Rate=303.96
+[xla:3](500) Loss=0.00415 Rate=292.66
+[xla:4](500) Loss=0.00415 Rate=292.89
+[xla:7](500) Loss=0.00415 Rate=293.12
+[xla:1](500) Loss=0.00415 Rate=298.90
+[xla:6](500) Loss=0.00415 Rate=293.34
+[xla:2](500) Loss=0.00415 Rate=293.58
+[xla:8](500) Loss=0.00415 Rate=292.71
+[xla:8](520) Loss=0.00432 Rate=267.65
+[xla:4](520) Loss=0.00432 Rate=267.73
+[xla:5](520) Loss=0.00432 Rate=272.94
+[xla:2](520) Loss=0.00432 Rate=267.70
+[xla:1](520) Loss=0.00432 Rate=270.01
+[xla:3](520) Loss=0.00432 Rate=267.96
+[xla:6](520) Loss=0.00432 Rate=267.65
+[xla:7](520) Loss=0.00432 Rate=267.65
+[xla:1](540) Loss=0.00448 Rate=317.33
+[xla:8](540) Loss=0.00448 Rate=311.18
+[xla:5](540) Loss=0.00448 Rate=314.22
+[xla:3](540) Loss=0.00448 Rate=312.71
+[xla:4](540) Loss=0.00448 Rate=312.43
+[xla:7](540) Loss=0.00448 Rate=312.15
+[xla:2](540) Loss=0.00448 Rate=312.43
+[xla:6](540) Loss=0.00448 Rate=312.35
+[xla:7](560) Loss=0.00464 Rate=333.33
+[xla:4](560) Loss=0.00464 Rate=320.27
+[xla:5](560) Loss=0.00464 Rate=325.09
+[xla:2](560) Loss=0.00464 Rate=318.26
+[xla:8](560) Loss=0.00464 Rate=320.91
+[xla:6](560) Loss=0.00464 Rate=319.38
+[xla:1](560) Loss=0.00464 Rate=334.04
+[xla:3](560) Loss=0.00464 Rate=340.41
+[xla:8](580) Loss=0.00478 Rate=351.19
+[xla:3](580) Loss=0.00478 Rate=330.13
+[xla:1](580) Loss=0.00478 Rate=331.87
+[xla:4](580) Loss=0.00478 Rate=330.35
+[xla:6](580) Loss=0.00478 Rate=330.46
+[xla:7](580) Loss=0.00478 Rate=331.38
+[xla:5](580) Loss=0.00478 Rate=331.54
+[xla:2](580) Loss=0.00478 Rate=330.96
+[xla:4](600) Loss=0.00491 Rate=309.59
+[xla:6](600) Loss=0.00491 Rate=307.62
+[xla:1](600) Loss=0.00491 Rate=307.72
+[xla:7](600) Loss=0.00491 Rate=308.10
+[xla:8](600) Loss=0.00491 Rate=308.34
+[xla:5](600) Loss=0.00491 Rate=314.99
+[xla:2](600) Loss=0.00491 Rate=308.15
+[xla:3](600) Loss=0.00491 Rate=307.57
+[xla:4](620) Loss=0.00503 Rate=309.91
+[xla:3](620) Loss=0.00503 Rate=309.29
+[xla:1](620) Loss=0.00503 Rate=317.13
+[xla:6](620) Loss=0.00503 Rate=313.18
+[xla:8](620) Loss=0.00503 Rate=308.83
+[xla:5](620) Loss=0.00503 Rate=310.68
+[xla:2](620) Loss=0.00503 Rate=313.00
+[xla:7](620) Loss=0.00503 Rate=310.33
+[xla:4](640) Loss=0.00514 Rate=332.95
+[xla:3](640) Loss=0.00514 Rate=333.44
+[xla:2](640) Loss=0.00514 Rate=333.29
+[xla:8](640) Loss=0.00514 Rate=333.28
+[xla:1](640) Loss=0.00514 Rate=332.72
+[xla:5](640) Loss=0.00514 Rate=336.27
+[xla:6](640) Loss=0.00514 Rate=333.57
+[xla:7](640) Loss=0.00514 Rate=334.66
+[xla:8](660) Loss=0.00524 Rate=328.90
+[xla:1](660) Loss=0.00524 Rate=329.47
+[xla:4](660) Loss=0.00524 Rate=327.56
+[xla:6](660) Loss=0.00524 Rate=328.64
+[xla:7](660) Loss=0.00524 Rate=329.64
+[xla:2](660) Loss=0.00524 Rate=328.10
+[xla:3](660) Loss=0.00524 Rate=329.10
+[xla:5](660) Loss=0.00524 Rate=337.39
+[xla:1](680) Loss=0.00532 Rate=332.34
+[xla:5](680) Loss=0.00532 Rate=342.64
+[xla:7](680) Loss=0.00532 Rate=333.11
+[xla:2](680) Loss=0.00532 Rate=333.85
+[xla:3](680) Loss=0.00532 Rate=332.03
+[xla:4](680) Loss=0.00532 Rate=331.91
+[xla:6](680) Loss=0.00532 Rate=332.27
+[xla:8](680) Loss=0.00532 Rate=332.51
+[xla:3](700) Loss=0.00541 Rate=338.01
+[xla:2](700) Loss=0.00541 Rate=339.46
+[xla:5](700) Loss=0.00541 Rate=351.01
+[xla:4](700) Loss=0.00541 Rate=338.38
+[xla:7](700) Loss=0.00541 Rate=338.81
+[xla:6](700) Loss=0.00541 Rate=333.57
+[xla:8](700) Loss=0.00541 Rate=338.24
+[xla:1](700) Loss=0.00541 Rate=333.83
+[xla:2](720) Loss=0.00548 Rate=307.76
+[xla:1](720) Loss=0.00548 Rate=310.38
+[xla:3](720) Loss=0.00548 Rate=309.23
+[xla:4](720) Loss=0.00548 Rate=308.14
+[xla:5](720) Loss=0.00548 Rate=307.68
+[xla:8](720) Loss=0.00548 Rate=308.15
+[xla:6](720) Loss=0.00548 Rate=308.93
+[xla:7](720) Loss=0.00548 Rate=305.99
+[xla:7](740) Loss=0.00554 Rate=306.85
+[xla:8](740) Loss=0.00554 Rate=304.18
+[xla:6](740) Loss=0.00554 Rate=307.10
+[xla:3](740) Loss=0.00554 Rate=304.50
+[xla:4](740) Loss=0.00554 Rate=303.65
+[xla:2](740) Loss=0.00554 Rate=306.79
+[xla:5](740) Loss=0.00554 Rate=304.62
+[xla:1](740) Loss=0.00554 Rate=304.43
+[xla:3](760) Loss=0.00560 Rate=314.88
+[xla:5](760) Loss=0.00560 Rate=320.07
+[xla:8](760) Loss=0.00560 Rate=318.02
+[xla:6](760) Loss=0.00560 Rate=315.43
+[xla:2](760) Loss=0.00560 Rate=317.93
+[xla:7](760) Loss=0.00560 Rate=318.96
+[xla:1](760) Loss=0.00560 Rate=316.75
+[xla:4](760) Loss=0.00560 Rate=317.73
+[xla:5](780) Loss=0.00565 Rate=308.21
+[xla:7](780) Loss=0.00565 Rate=304.37
+[xla:4](780) Loss=0.00565 Rate=308.27
+[xla:2](780) Loss=0.00565 Rate=309.12
+[xla:1](780) Loss=0.00565 Rate=308.79
+[xla:3](780) Loss=0.00565 Rate=308.78
+[xla:6](780) Loss=0.00565 Rate=308.29
+[xla:8](780) Loss=0.00565 Rate=310.72
+[xla:5](800) Loss=0.00569 Rate=340.72
+[xla:6](800) Loss=0.00569 Rate=327.67
+[xla:3](800) Loss=0.00569 Rate=329.28
+[xla:1](800) Loss=0.00569 Rate=334.68
+[xla:2](800) Loss=0.00569 Rate=327.59
+[xla:4](800) Loss=0.00569 Rate=326.93
+[xla:7](800) Loss=0.00569 Rate=327.69
+[xla:8](800) Loss=0.00569 Rate=328.56
+[xla:1](820) Loss=0.00574 Rate=317.19
+[xla:8](820) Loss=0.00574 Rate=313.11
+[xla:7](820) Loss=0.00574 Rate=313.29
+[xla:6](820) Loss=0.00574 Rate=315.21
+[xla:2](820) Loss=0.00574 Rate=314.05
+[xla:3](820) Loss=0.00574 Rate=312.84
+[xla:5](820) Loss=0.00574 Rate=318.80
+[xla:4](820) Loss=0.00574 Rate=313.83
+[xla:6](840) Loss=0.00577 Rate=323.77
+[xla:3](840) Loss=0.00577 Rate=321.57
+[xla:1](840) Loss=0.00577 Rate=331.44
+[xla:5](840) Loss=0.00577 Rate=354.28
+[xla:2](840) Loss=0.00577 Rate=324.85
+[xla:7](840) Loss=0.00577 Rate=324.35
+[xla:8](840) Loss=0.00577 Rate=324.72
+[xla:4](840) Loss=0.00577 Rate=320.13
+[xla:1](860) Loss=0.00580 Rate=313.05
+[xla:3](860) Loss=0.00580 Rate=312.64
+[xla:8](860) Loss=0.00580 Rate=312.73
+[xla:7](860) Loss=0.00580 Rate=313.55
+[xla:4](860) Loss=0.00580 Rate=313.66
+[xla:5](860) Loss=0.00580 Rate=338.97
+[xla:6](860) Loss=0.00580 Rate=314.20
+[xla:2](860) Loss=0.00580 Rate=310.59
+[xla:5](880) Loss=0.00583 Rate=364.14
+[xla:1](880) Loss=0.00583 Rate=336.13
+[xla:2](880) Loss=0.00583 Rate=334.36
+[xla:6](880) Loss=0.00583 Rate=335.48
+[xla:3](880) Loss=0.00583 Rate=335.64
+[xla:8](880) Loss=0.00583 Rate=336.74
+[xla:7](880) Loss=0.00583 Rate=333.59
+[xla:4](880) Loss=0.00583 Rate=335.14
+[xla:7](900) Loss=0.00585 Rate=310.79
+[xla:4](900) Loss=0.00585 Rate=310.89
+[xla:3](900) Loss=0.00585 Rate=311.45
+[xla:8](900) Loss=0.00585 Rate=310.51
+[xla:5](900) Loss=0.00585 Rate=319.89
+[xla:6](900) Loss=0.00585 Rate=311.13
+[xla:1](900) Loss=0.00585 Rate=312.77
+[xla:2](900) Loss=0.00585 Rate=310.92
+[xla:4](920) Loss=0.00587 Rate=322.18
+[xla:7](920) Loss=0.00587 Rate=330.28
+[xla:2](920) Loss=0.00587 Rate=322.45
+[xla:8](920) Loss=0.00587 Rate=321.61
+[xla:5](920) Loss=0.00587 Rate=328.87
+[xla:6](920) Loss=0.00587 Rate=321.29
+[xla:1](920) Loss=0.00587 Rate=321.50
+[xla:3](920) Loss=0.00587 Rate=328.89
+[xla:7](940) Loss=0.00589 Rate=309.74
+[xla:4](940) Loss=0.00589 Rate=305.48
+[xla:1](940) Loss=0.00589 Rate=305.95
+[xla:8](940) Loss=0.00589 Rate=307.70
+[xla:3](940) Loss=0.00589 Rate=306.81
+[xla:2](940) Loss=0.00589 Rate=306.28
+[xla:5](940) Loss=0.00589 Rate=314.09
+[xla:6](940) Loss=0.00589 Rate=306.36
+[xla:8](960) Loss=0.00591 Rate=304.58
+[xla:7](960) Loss=0.00591 Rate=306.29
+[xla:1](960) Loss=0.00591 Rate=308.67
+[xla:4](960) Loss=0.00591 Rate=304.60
+[xla:5](960) Loss=0.00591 Rate=312.93
+[xla:2](960) Loss=0.00591 Rate=307.98
+[xla:6](960) Loss=0.00591 Rate=305.50
+[xla:3](960) Loss=0.00591 Rate=304.95
+[xla:2](980) Loss=0.00592 Rate=304.03
+[xla:1](980) Loss=0.00592 Rate=313.75
+[xla:5](980) Loss=0.00592 Rate=309.18
+[xla:6](980) Loss=0.00592 Rate=304.23
+[xla:4](980) Loss=0.00592 Rate=304.65
+[xla:7](980) Loss=0.00592 Rate=304.33
+[xla:8](980) Loss=0.00592 Rate=304.04
+[xla:3](980) Loss=0.00592 Rate=303.93
+[xla:6](1000) Loss=0.00593 Rate=292.52
+[xla:5](1000) Loss=0.00593 Rate=305.88
+[xla:1](1000) Loss=0.00593 Rate=308.47
+[xla:7](1000) Loss=0.00593 Rate=303.27
+[xla:4](1000) Loss=0.00593 Rate=302.80
+[xla:2](1000) Loss=0.00593 Rate=304.02
+[xla:8](1000) Loss=0.00593 Rate=292.76
+[xla:3](1000) Loss=0.00593 Rate=302.54
+[xla:6](1020) Loss=0.00595 Rate=307.22
+[xla:2](1020) Loss=0.00595 Rate=305.24
+[xla:5](1020) Loss=0.00595 Rate=310.93
+[xla:8](1020) Loss=0.00595 Rate=303.47
+[xla:3](1020) Loss=0.00595 Rate=305.76
+[xla:7](1020) Loss=0.00595 Rate=306.90
+[xla:1](1020) Loss=0.00595 Rate=304.93
+[xla:4](1020) Loss=0.00595 Rate=306.67
+[xla:3](1040) Loss=0.00596 Rate=313.38
+[xla:2](1040) Loss=0.00596 Rate=313.41
+[xla:6](1040) Loss=0.00596 Rate=313.69
+[xla:4](1040) Loss=0.00596 Rate=313.35
+[xla:5](1040) Loss=0.00596 Rate=321.40
+[xla:8](1040) Loss=0.00596 Rate=313.19
+[xla:1](1040) Loss=0.00596 Rate=317.02
+[xla:7](1040) Loss=0.00596 Rate=313.14
+[xla:3](1060) Loss=0.00596 Rate=323.51
+[xla:8](1060) Loss=0.00596 Rate=324.51
+[xla:4](1060) Loss=0.00596 Rate=323.91
+[xla:2](1060) Loss=0.00596 Rate=324.18
+[xla:7](1060) Loss=0.00596 Rate=324.11
+[xla:6](1060) Loss=0.00596 Rate=324.02
+[xla:1](1060) Loss=0.00596 Rate=322.63
+[xla:5](1060) Loss=0.00596 Rate=333.98
+[xla:8](1080) Loss=0.00597 Rate=317.46
+[xla:6](1080) Loss=0.00597 Rate=317.62
+[xla:4](1080) Loss=0.00597 Rate=318.22
+[xla:7](1080) Loss=0.00597 Rate=317.07
+[xla:1](1080) Loss=0.00597 Rate=317.13
+[xla:2](1080) Loss=0.00597 Rate=316.68
+[xla:5](1080) Loss=0.00597 Rate=328.42
+[xla:3](1080) Loss=0.00597 Rate=316.93
+[xla:8](1100) Loss=0.00598 Rate=288.65
+[xla:3](1100) Loss=0.00598 Rate=288.55
+[xla:6](1100) Loss=0.00598 Rate=288.63
+[xla:4](1100) Loss=0.00598 Rate=290.76
+[xla:7](1100) Loss=0.00598 Rate=288.06
+[xla:1](1100) Loss=0.00598 Rate=288.45
+[xla:2](1100) Loss=0.00598 Rate=289.25
+[xla:5](1100) Loss=0.00598 Rate=298.64
+[xla:7](1120) Loss=0.00598 Rate=307.42
+[xla:3](1120) Loss=0.00598 Rate=307.39
+[xla:1](1120) Loss=0.00598 Rate=313.70
+[xla:6](1120) Loss=0.00598 Rate=307.49
+[xla:5](1120) Loss=0.00598 Rate=314.36
+[xla:2](1120) Loss=0.00598 Rate=307.14
+[xla:8](1120) Loss=0.00598 Rate=310.74
+[xla:4](1120) Loss=0.00598 Rate=306.86
+[xla:8](1140) Loss=0.00599 Rate=292.49
+[xla:6](1140) Loss=0.00599 Rate=292.77
+[xla:1](1140) Loss=0.00599 Rate=297.91
+[xla:7](1140) Loss=0.00599 Rate=292.32
+[xla:5](1140) Loss=0.00599 Rate=294.01
+[xla:2](1140) Loss=0.00599 Rate=292.77
+[xla:3](1140) Loss=0.00599 Rate=292.72
+[xla:4](1140) Loss=0.00599 Rate=292.59
+[xla:1](1160) Loss=0.00599 Rate=338.93
+[xla:6](1160) Loss=0.00599 Rate=331.57
+[xla:5](1160) Loss=0.00599 Rate=347.95
+[xla:4](1160) Loss=0.00599 Rate=331.97
+[xla:3](1160) Loss=0.00599 Rate=331.70
+[xla:8](1160) Loss=0.00599 Rate=331.70
+[xla:7](1160) Loss=0.00599 Rate=330.74
+[xla:2](1160) Loss=0.00599 Rate=330.81
+.
+----------------------------------------------------------------------
+Ran 1 test in 953.809s
+
+OK
+[xla:8] Accuracy=100.00%
+[xla:2] Accuracy=100.00%
+[xla:5] Accuracy=100.00%
+[xla:6] Accuracy=100.00%
+[xla:4] Accuracy=100.00%
+[xla:7] Accuracy=100.00%
+[xla:3] Accuracy=100.00%
+[xla:1] Accuracy=100.00%

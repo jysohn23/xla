@@ -36,6 +36,7 @@ import torch_xla_py.data_parallel as dp
 import torch_xla_py.utils as xu
 import torch_xla_py.xla_model as xm
 import unittest
+import time
 
 DEFAULT_KWARGS = dict(
     batch_size=128,
@@ -130,18 +131,23 @@ def train_imagenet():
             lr=FLAGS.lr,
             momentum=FLAGS.momentum,
             weight_decay=5e-4))
+#    start_time = time.time()
     tracker = xm.RateTracker()
     model.train()
     for x, (data, target) in loader:
+#      work_start_time = time.time()
       optimizer.zero_grad()
       output = model(data)
       loss = loss_fn(output, target)
       loss.backward()
       xm.optimizer_step(optimizer)
       tracker.add(FLAGS.batch_size)
+#      work_time = time.time() - work_start_time
       if x % FLAGS.log_steps == 0:
+#        print('Time blocked on input pipeline: {}s'.format(time.time()-start_time-work_time))
         print('[{}]({}) Loss={:.5f} Rate={:.2f}'.format(device, x, loss.item(),
-                                                        tracker.rate()))
+                                                        tracker.rate()), flush=True)
+#        start_time = time.time()
 
   def test_loop_fn(model, loader, device, context):
     total_samples = 0

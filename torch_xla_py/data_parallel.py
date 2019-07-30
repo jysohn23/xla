@@ -14,6 +14,8 @@ import torch_xla_py.utils as xu
 import torch_xla_py.xla_model as xm
 import traceback
 
+import psutil
+
 
 class Context(object):
 
@@ -70,8 +72,10 @@ class ParallelLoader(object):
                devices,
                batchdim=0,
                drop_last=False,
+#               loader_prefetch_size=8,
+#               device_prefetch_size=4):
                loader_prefetch_size=8,
-               device_prefetch_size=4):
+               device_prefetch_size=24):
     self._loader = loader
     self._batch_size = None
     self._devices = list(devices)
@@ -159,16 +163,60 @@ class ParallelLoader(object):
       batch.append(item[1])
     return batch
 
+#  def _worker(self, dqueue):
+#    device = torch.device(dqueue.device)
+#    batch = self._get_batch(dqueue)
+#    batch = self._send_data_to(batch, device)
+#    while True:
+#      for data in batch:
+#        dqueue.queue.put((dqueue.batch_number, data))
+#        dqueue.batch_number += 1
+#    dqueue.queue.close_write()
+
   def _worker(self, dqueue):
+    process = psutil.Process(os.getpid())
     device = torch.device(dqueue.device)
+
+    true_loop_cnt = 0
+
     while True:
+      #import pdb; pdb.set_trace()
+#      print('a({}) {} - {}: {} Gb'.format(
+#          true_loop_cnt,
+#          dqueue.device,
+#          dqueue.batch_number,
+#          process.memory_info().rss / float(1024*1024*1024)))
+
       batch = self._get_batch(dqueue)
+
+#      print('b({}) {} - {}: {} Gb'.format(
+#          true_loop_cnt,
+#          dqueue.device,
+#          dqueue.batch_number,
+#          process.memory_info().rss / float(1024*1024*1024)))
+
       if not batch:
         break
       batch = self._send_data_to(batch, device)
+#      import pdb; pdb.set_trace()
+      # NOTE: memory usage increases between b() and c()
+
+#      print('c({}) {} - {}: {} Gb'.format(
+#          true_loop_cnt,
+#          dqueue.device,
+#          dqueue.batch_number,
+#          process.memory_info().rss / float(1024*1024*1024)))
+
       for data in batch:
+        # TODO: Check the type of the "data" tensor: do we really need stuff in it or can we free memory?
+        
+        # NOTE: memory usage doesn't grow in this loop
+
         dqueue.queue.put((dqueue.batch_number, data))
         dqueue.batch_number += 1
+      #print("device: {} dqueue.batch_number: {}".format(dqueue.device, dqueue.batch_number))
+      #sys.stdout.flush()
+      true_loop_cnt += 1
     dqueue.queue.close_write()
 
 
