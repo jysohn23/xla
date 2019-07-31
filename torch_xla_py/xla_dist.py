@@ -369,3 +369,54 @@ class ClusterResolver(object):
     cluster.validate()
     return cluster
 
+
+def run_distributed():
+  train_cmd = FLAGS.positional
+  # Resolve VM and TPU clusters.
+  cluster_resolver = ClusterResolver(FLAGS.tpus)
+  client_workers = cluster_resolver.get_client_workers()
+  print(client_workers)
+  print(len(client_workers))
+  service_workers = cluster_resolver.get_service_workers()
+  print(service_workers)
+
+  # Build remote command (setup && train_cmd or setup + train_cmd for docker)
+  # pdsh
+
+
+if __name__ == "__main__":
+  parser = argparse.ArgumentParser(
+      description="PyTorch on TPU distrubuted training",
+      epilog="Usage example: xla_dist.py --tpus=[TPU_NAME] -- python train.py")
+  parser.add_argument(
+      "positional",
+      nargs="+",
+      default="",
+      type=str,
+      help="The python command to launch training including model parameters.")
+  parser.add_argument(
+      "--tpus",
+      nargs="+",
+      default="",
+      type=str,
+      help="Name of the TPU pod, or list of single Cloud TPU devices (v*-8).")
+  parser.add_argument(
+      "--vms",
+      nargs="+",
+      default="",
+      type=str,
+      help="List of single Compute VM instance names.")
+  parser.add_argument(
+      "--setup_cmd",
+      default="",
+      type=str,
+      help=("Full setup command to setup environment before running python training script."
+            " The following are all valid examples values for --setup_cmd:"
+            " (1) docker run --shm-size 16G -e XLA_IR_DEBUG=0 gcr.io/tpu-pytorch/xla:nightly"
+            " (2) conda activate nightly-pytorch"))
+
+  FLAGS = parser.parse_args()
+  run_distributed()
+
+# conda remote ssh run example
+# ssh -i ~/.ssh/google_compute_engine jysohn@34.90.117.117 -t bash -c 'hostname && source /etc/profile && source activate pytorch-nightly && export XRT_TPU_CONFIG="tpu_worker;0;10.7.7.2:8470" && python /usr/share/torch-xla-nightly/pytorch/xla/test/test_train_mnist.py'
