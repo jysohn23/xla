@@ -28,21 +28,21 @@ class ClusterTest(unittest.TestCase):
             '10.0.0.3', 'n1-standard-16', 'europe-west4-a', hostname='test'),
     ]
     service_workers = [
-        ServiceWorker('10.0.0.0', 'v3-32', 'europe-west4-a'),
-        ServiceWorker('10.0.0.1', 'v3-32', 'europe-west4-a'),
-        ServiceWorker('10.0.0.2', 'v3-32', 'europe-west4-a'),
-        ServiceWorker('10.0.0.3', 'v3-32', 'europe-west4-a'),
+        ServiceWorker('10.0.0.0', '8470', 'v3-32', 'europe-west4-a', 'pytorch-0.2'),
+        ServiceWorker('10.0.0.1', '8470', 'v3-32', 'europe-west4-a', 'pytorch-0.2'),
+        ServiceWorker('10.0.0.2', '8470', 'v3-32', 'europe-west4-a', 'pytorch-0.2'),
+        ServiceWorker('10.0.0.3', '8470', 'v3-32', 'europe-west4-a', 'pytorch-0.2'),
     ]
     cluster = Cluster(client_workers, service_workers)
     cluster.validate()  # Does not raise exception
 
   def test_create_bad_client_workers(self):
     service_workers = [
-        ServiceWorker('10.0.0.1', 'v3-8', 'europe-west4-a'),
+        ServiceWorker('10.0.0.1', '8470', 'v3-8', 'europe-west4-a', 'pytorch-0.2'),
     ]
     client_workers = [
         ClientWorker('10.0.0.1', 'v3-8', 'europe-west4-a'),
-        ServiceWorker('10.0.0.1', 'v3-8', 'europe-west4-a'),
+        ServiceWorker('10.0.0.1', '8470', 'v3-8', 'europe-west4-a', 'pytorch-0.2'),
     ]
     self.assertRaisesRegex(
         ValueError, 'client_workers argument must be a list of ClientWorker',
@@ -63,8 +63,8 @@ class ClusterTest(unittest.TestCase):
         ClientWorker('10.0.0.1', 'n1-standard-8', 'europe-west4-a'),
     ]
     service_workers = [
-        ServiceWorker('10.0.0.0', 'v3-8', 'europe-west4-a'),
-        ServiceWorker('10.0.0.1', 'v3-8', 'europe-west4-a'),
+        ServiceWorker('10.0.0.0', '8470', 'v3-8', 'europe-west4-a', 'pytorch-0.2'),
+        ServiceWorker('10.0.0.1', '8470', 'v3-8', 'europe-west4-a', 'pytorch-0.2'),
     ]
 
     no_check_cluster = Cluster(
@@ -82,8 +82,8 @@ class ClusterTest(unittest.TestCase):
         ClientWorker('10.0.0.1', 'n1-standard-16', 'europe-west4-a'),
     ]
     service_workers = [
-        ServiceWorker('10.0.0.0', 'v3-8', 'europe-west4-a'),
-        ServiceWorker('10.0.0.1', 'v2-8', 'europe-west4-a'),
+        ServiceWorker('10.0.0.0', '8470', 'v3-8', 'europe-west4-a', 'pytorch-0.2'),
+        ServiceWorker('10.0.0.1', '8470', 'v2-8', 'europe-west4-a', 'pytorch-0.2'),
     ]
 
     no_check_cluster = Cluster(
@@ -101,8 +101,8 @@ class ClusterTest(unittest.TestCase):
         ClientWorker('10.0.0.1', 'n1-standard-16', 'us-central1-b'),
     ]
     service_workers = [
-        ServiceWorker('10.0.0.0', 'v3-8', 'europe-west4-a'),
-        ServiceWorker('10.0.0.1', 'v3-8', 'europe-west4-a'),
+        ServiceWorker('10.0.0.0', '8470', 'v3-8', 'europe-west4-a', 'pytorch-0.2'),
+        ServiceWorker('10.0.0.1', '8470', 'v3-8', 'europe-west4-a', 'pytorch-0.2'),
     ]
     cluster = Cluster(client_workers, service_workers)
     self.assertRaisesRegex(RuntimeError, 'All workers must be in the same zone',
@@ -115,10 +115,10 @@ class ClusterTest(unittest.TestCase):
         ClientWorker('10.0.0.2', 'n1-standard-16', 'europe-west4-a'),
     ]
     service_workers = [
-        ServiceWorker('10.0.0.0', 'v3-32', 'europe-west4-a'),
-        ServiceWorker('10.0.0.1', 'v3-32', 'europe-west4-a'),
-        ServiceWorker('10.0.0.2', 'v3-32', 'europe-west4-a'),
-        ServiceWorker('10.0.0.3', 'v3-32', 'europe-west4-a'),
+        ServiceWorker('10.0.0.0', '8470', 'v3-32', 'europe-west4-a', 'pytorch-0.2'),
+        ServiceWorker('10.0.0.1', '8470', 'v3-32', 'europe-west4-a', 'pytorch-0.2'),
+        ServiceWorker('10.0.0.2', '8470', 'v3-32', 'europe-west4-a', 'pytorch-0.2'),
+        ServiceWorker('10.0.0.3', '8470', 'v3-32', 'europe-west4-a', 'pytorch-0.2'),
     ]
     cluster = Cluster(client_workers, service_workers)
     self.assertRaisesRegex(
@@ -133,6 +133,25 @@ class ClusterTest(unittest.TestCase):
         'Both client_workers and service_workers should not be empty',
         cluster.validate)
 
+  def test_validate_diff_sw_versions(self):
+    client_workers = [
+        ClientWorker('10.0.0.0', 'n1-standard-16', 'europe-west4-a'),
+        ClientWorker('10.0.0.1', 'n1-standard-16', 'europe-west4-a'),
+        ClientWorker('10.0.0.2', 'n1-standard-16', 'europe-west4-a'),
+        ClientWorker('10.0.0.3', 'n1-standard-16', 'europe-west4-a'),
+    ]
+    service_workers = [
+        ServiceWorker('10.0.0.0', '8470', 'v3-32', 'europe-west4-a', 'pytorch-0.1'),
+        ServiceWorker('10.0.0.1', '8470', 'v3-32', 'europe-west4-a', 'pytorch-0.2'),
+        ServiceWorker('10.0.0.2', '8470', 'v3-32', 'europe-west4-a', 'pytorch-0.1'),
+        ServiceWorker('10.0.0.3', '8470', 'v3-32', 'europe-west4-a', 'pytorch-0.2'),
+    ]
+    cluster = Cluster(client_workers, service_workers)
+    self.assertRaisesRegex(
+        RuntimeError,
+        'All service workers must have the same sw_version.*',
+        cluster.validate)
+
 
 def mock_request_metadata(cls, metadata):
   fake_metadata = {
@@ -144,11 +163,17 @@ def mock_request_metadata(cls, metadata):
 
 
 def build_mock_tpu_service(get_tpu_resp):
-  get_node = mock.MagicMock()
-  get_node.execute.return_value = get_tpu_resp
+
+  def get_tpu_fn(*args, **kwargs):
+    print('get_tpu_fn: args:{} kwargs{}'.format(args, kwargs))
+    node_name = kwargs['name'].split('/')[-1]
+    resp = get_tpu_resp[node_name]
+    get_node = mock.MagicMock()
+    get_node.execute.return_value = resp
+    return get_node
 
   nodes = mock.MagicMock()
-  nodes.get.return_value = get_node
+  nodes.get.side_effect = get_tpu_fn
 
   locations = mock.MagicMock()
   locations.nodes.return_value = nodes
@@ -158,6 +183,7 @@ def build_mock_tpu_service(get_tpu_resp):
 
   tpu_service = mock.MagicMock()
   tpu_service.projects.return_value = projects
+  tpu_service.new_batch_http_request.return_value = build_mock_batch_call()
 
   return tpu_service
 
@@ -199,6 +225,7 @@ def build_mock_services_fn(mock_compute_service, mock_tpu_service):
     if serviceName == 'compute':
       return mock_compute_service
     elif serviceName == 'tpu':
+      print('GETTING TPU SERVICE')
       return mock_tpu_service
     else:
       raise RuntimeError('Service name "{}" is not mocked.'.format(serviceName))
@@ -323,7 +350,7 @@ class ClusterResolverTest(unittest.TestCase):
 
     # Act
     cr = ClusterResolver(['fake-tpu'])
-    vm_cluster = cr._get_client_workers()
+    vm_cluster = cr.get_client_workers()
 
     # Assert
     expected = [
@@ -352,7 +379,7 @@ class ClusterResolverTest(unittest.TestCase):
     # Act
     vms = ['fake-ig-a', 'fake-ig-b', 'fake-ig-c', 'fake-ig-d']
     cr = ClusterResolver(['fake-tpu'], vms=vms)
-    vm_cluster = cr._get_client_workers()
+    vm_cluster = cr.get_client_workers()
 
     # Assert
     expected = [
@@ -387,7 +414,7 @@ class ClusterResolverTest(unittest.TestCase):
 
     # Assert
     self.assertRaisesRegex(RuntimeError, '.*vms is empty in instance group.*',
-                           cr._get_client_workers)
+                           cr.get_client_workers)
 
   def test_unhealthy_client_cluster(self):
     # Arrange
@@ -429,7 +456,47 @@ class ClusterResolverTest(unittest.TestCase):
     # Assert
     self.assertRaisesRegex(RuntimeError,
                            'Instance fake-ig-b is not running yet.*',
-                           cr._get_client_workers)
+                           cr.get_client_workers)
+
+  def test_healthy_pod_service_cluster(self):
+    def gen_fake_single_tpu_entry(accelerator_type, health, internal_ip, name,
+                                  state, sw_version):
+      pass
+
+    tpu_resp_map = {
+        'fake-pod': {
+            'acceleratorType': 'v3-2048',
+            'health': 'HEALTHY',
+            'ipAddress': '10.0.0.2',
+            'name':
+                'projects/fake-project/locations/fake-zone/nodes/fake-pod',
+            'networkEndpoints': [
+                {'ipAddress': '10.0.0.{}'.format(ip), 'port': 8470}
+                for ip in range(256)
+            ],
+            'state': 'READY',
+            'tensorflowVersion': 'nightly',
+        }
+    }
+    noop_compute_service = build_mock_compute_service({}, {})
+    tpu_service = build_mock_tpu_service(tpu_resp_map)
+    self.mock_discovery.side_effect = build_mock_services_fn(
+        noop_compute_service, tpu_service)
+
+    cr = ClusterResolver(['fake-pod'])
+    service_workers = cr.get_service_workers()
+
+    expected = [
+        ServiceWorker(internal_ip='10.0.0.{}'.format(ip),
+                      port='8470',
+                      machine_type='v3-2048',
+                      zone='fake-zone',
+                      sw_version='nightly')
+        for ip in range(256)
+    ]
+    self.assertCountEqual(expected, service_workers)
+
+
 
 
 if __name__ == '__main__':
