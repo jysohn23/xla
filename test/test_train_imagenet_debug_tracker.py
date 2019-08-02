@@ -36,6 +36,7 @@ import torch_xla_py.data_parallel as dp
 import torch_xla_py.utils as xu
 import torch_xla_py.xla_model as xm
 import unittest
+import time
 
 DEFAULT_KWARGS = dict(
     batch_size=128,
@@ -74,7 +75,7 @@ def train_imagenet():
     train_loader = xu.SampleGenerator(
         data=(torch.zeros(FLAGS.batch_size, 3, img_dim, img_dim),
               torch.zeros(FLAGS.batch_size, dtype=torch.int64)),
-        sample_count=1000000 // FLAGS.batch_size)
+        sample_count=1200000 // FLAGS.batch_size)
     test_loader = xu.SampleGenerator(
         data=(torch.zeros(FLAGS.batch_size, 3, img_dim, img_dim),
               torch.zeros(FLAGS.batch_size, dtype=torch.int64)),
@@ -131,7 +132,11 @@ def train_imagenet():
             momentum=FLAGS.momentum,
             weight_decay=5e-4))
     tracker = xm.RateTracker()
+    og_tracker = xm.RateTracker()
     model.train()
+
+    start = time.time()
+    examples = 0
     for x, (data, target) in loader:
       optimizer.zero_grad()
       output = model(data)
@@ -139,10 +144,26 @@ def train_imagenet():
       loss.backward()
       xm.optimizer_step(optimizer)
       tracker.add(FLAGS.batch_size)
-      print('[{}]({}) img/sec={:.2f}'.format(device, x, tracker._rates[-1]), flush=True)
+      og_tracker.add(FLAGS.batch_size)
+      examples += FLAGS.batch_size
+      # Likely that the loss.item() call takes a long time and we're discounting
+      # that when printing the tracker.rate() since the rate here is already
+      # computed by tracker.add()
+      print('[{}]({}) (debug)examples/sec={:.2f}'.format(
+          device, x, float(examples)/(time.time() - start)))
       if x % FLAGS.log_steps == 0:
-        print('[{}]({}) Loss={:.5f} Rate={:.2f}'.format(device, x, loss.item(),
-                                                        tracker.rate()), flush=True)
+        #loss_scalar = loss.item()
+        loss_scalar = 0
+        print('[{}]({}) Loss={:.5f} OGRate={:.2f} Rate={:.2f} (debug)examples/sec={:.2f}'.format(
+            device, x, loss_scalar, og_tracker.rate(), tracker.avg,
+            #device, x, loss_scalar, tracker.add(0),
+            #device, x, loss.item(), tracker.rate(),
+            float(examples)/(time.time() - start)))
+#        start = time.time()
+#        examples = 0
+
+      start = time.time()
+      examples = 0
 
   def test_loop_fn(model, loader, device, context):
     total_samples = 0

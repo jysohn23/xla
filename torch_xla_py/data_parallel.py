@@ -5,6 +5,7 @@ import os
 from six import iteritems, itervalues
 from copy import deepcopy
 import sys
+import time
 import threading
 import torch
 import torch.autograd
@@ -56,8 +57,15 @@ class PerDeviceLoader(object):
     return self.next()
 
   def next(self):
+    a = time.time()
     xm.mark_step()
+    b = time.time()
     item = self._loader.next_item(self._device)
+    c = time.time()
+
+    print('[{}] xm.mark_step time {}'.format(str(self._device), b-a))
+    print('[{}] self._loader.next_item time {}'.format(str(self._device), c-b))
+
     if item is None:
       raise StopIteration
     return item
@@ -70,7 +78,7 @@ class ParallelLoader(object):
                devices,
                batchdim=0,
                drop_last=False,
-               loader_prefetch_size=8,
+               loader_prefetch_size=16,
                device_prefetch_size=4):
     self._loader = loader
     self._batch_size = None
@@ -86,9 +94,13 @@ class ParallelLoader(object):
     thread.daemon = True
     thread.start()
     for dqueue in itervalues(self._queues):
-      thread = threading.Thread(target=self._worker, args=(dqueue,))
+      # TODO: Try spinning up 2 self._worker threads per device (core)
+      thread = threading.Thread(target=self._worker, args=(dqueue, 1))
+      thread2 = threading.Thread(target=self._worker, args=(dqueue, 2))
       thread.daemon = True
+      thread2.daemon = True
       thread.start()
+      thread2.start()
 
   def per_device_loader(self, device):
     return PerDeviceLoader(self, device)
@@ -120,7 +132,11 @@ class ParallelLoader(object):
 
     def convert_fn(tensors):
       devices = [str(device)] * len(tensors)
-      return torch_xla._XLAC._xla_tensors_from_aten(tensors, devices)
+      xla_start = time.time()
+      res =  torch_xla._XLAC._xla_tensors_from_aten(tensors, devices)
+      print('[{}] torch_xla._XLAC._xla_tensors_from_aten: {}'. format(
+          str(device), time.time() - xla_start))
+      return res
 
     def select_fn(v):
       return type(v) == torch.Tensor
@@ -159,16 +175,28 @@ class ParallelLoader(object):
       batch.append(item[1])
     return batch
 
-  def _worker(self, dqueue):
+  def _worker(self, dqueue, thread_num):
     device = torch.device(dqueue.device)
+
     while True:
+      print('[{}][{}] calling to get a batch; dqueue.queue._items.qsize(): {}'.format(
+          dqueue.device, thread_num, dqueue.queue._items.qsize()))
+      # NOTE: looks like we get here and wait somewhere here
       batch = self._get_batch(dqueue)
       if not batch:
         break
+      send_start = time.time()
+      print('[{}][{}] sending a batch'.format(dqueue.device, thread_num))
       batch = self._send_data_to(batch, device)
+      # NOTE: looks like the batch_sending only happends once every N steps -->
+      # FIND WHERE ITS BLOCKED ON
+      print('[{}][{}] batch_send_time: {}'.format(dqueue.device, thread_num,
+                                                  time.time()-send_start))
       for data in batch:
         dqueue.queue.put((dqueue.batch_number, data))
         dqueue.batch_number += 1
+      print('[{}][{}] done and waiting; dqueue.queue._items.qsize(): {}'.format(
+          dqueue.device, thread_num, dqueue.queue._items.qsize()))
     dqueue.queue.close_write()
 
 

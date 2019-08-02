@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-import collections
+from collections import deque
 import gc
 from six import itervalues
 import os
@@ -137,32 +137,69 @@ def xla_replication_devices(local_devices):
 
 class RateTracker(object):
 
-  def __init__(self, smooth_factor=0.8):
-    self._smooth_factor = smooth_factor
+  def __init__(self, window_size=20):
+    self._rates = deque(maxlen=window_size)
     self._start_time = time.time()
     self._partial_time = self._start_time
-    self._count = 0
-    self._rate = 0.0
+    self._total_count = 0
 
-  def update(self, count):
+  def add(self, count):
     now = time.time()
     delta = now - self._partial_time
     if delta > 0:
-      rate = (count - self._count) / delta
-      self._rate = (
-          self._rate * self._smooth_factor + rate * (1.0 - self._smooth_factor))
+      rate = count / delta
+      self._rates.append(rate)
     self._partial_time = now
-    self._count = count
-    return self._rate
+    self._total_count += count
+    return self.avg
 
-  def add(self, count):
-    return self.update(self._count + count)
+  @property
+  def avg(self):
+    d = torch.tensor(list(self._rates), dtype=torch.float32)
+    return d.mean().item()
 
   def rate(self):
-    return self._rate
+    return self.avg
 
   def global_rate(self):
-    return self._count / (self._partial_time - self._start_time)
+    return self._total_count / (self._partial_time - self._start_time)
+
+
+#class RateTracker(object):
+#
+#  def __init__(self, smooth_factor=0.8):
+#    self._smooth_factor = smooth_factor
+#    self._start_time = time.time()
+#    self._partial_time = self._start_time
+#    self._count = 0
+#    self._rate = 0.0
+#
+#  def add(self, count):
+#    now = time.time()
+#    delta = now - self._partial_time
+#    if delta > 0:
+#      rate = count / delta
+#      self._rate = (
+#          self._rate * self._smooth_factor + rate * (1.0 - self._smooth_factor))
+#    self._partial_time = now
+#    self._count += count
+#    return self._rate
+#
+#  def rate(self):
+#    return self._rate
+#
+#  def global_rate_reset(self):
+#    global_rate = self.global_rate()
+#    self._start_time = time.time()
+#    self._partial_time = self._start_time
+#    self._count = 0
+#    self._rate = 0
+#    return global_rate
+#
+#  def global_rate(self):
+#    if self._partial_time == self._start_time:
+#      return 0
+#    return self._count / (self._partial_time - self._start_time)
 
 
 class TrainStepMetrics(object):
@@ -289,9 +326,19 @@ class ToXlaTensorArena(object):
 
   def transform(self, inputs):
     self._tensors = []
+    a = time.time()
     self._collect_tensors(inputs)
+    b = time.time()
     self._convert()
-    return self._replace_tensors(inputs)
+    c = time.time()
+    res = self._replace_tensors(inputs)
+    d = time.time()
+
+#    print('self._collect_tensors(inputs): {}'.format(b-a), flush=True)
+#    print('self.convert(): {}'.format(c-b), flush=True)
+#    print('self._replace_tensors(inputs): {}'.format(d-c), flush=True)
+
+    return res
 
 
 def _get_summary_writer(logdir=None):
@@ -326,14 +373,26 @@ def _fetch_gradients(optimizer):
 
 
 def _mark_step(replication):
+
   devices = []
   if replication:
+    a = time.time()
     replication.enter()
+    b = time.time()
     devices = replication.replication_devices()
+    c = time.time()
+    print('[{}] replication.enter() time: {}'.format(
+        getattr(_TLS, 'device_index'), b-a))
+    print('[{}] replication.xla_replication_devices() time: {}'.format(
+        getattr(_TLS, 'device_index'), c-b))
+  c = time.time()
   torch_xla._XLAC._xla_step_marker(
       torch_xla._XLAC._xla_get_default_device(),
       devices,
       wait=xu.getenv_as('XLA_SYNC_WAIT', bool, False))
+  d = time.time()
+  print('[{}] torch_xla._XLAC._xla_step_marker() time: {}'.format(
+      getattr(_TLS, 'device_index'), d-c))
   # Only emit metrics from the first local device index, to avoid emitting the
   # same values from different threads.
   if getattr(_TLS, 'device_index', 0) == 0:
