@@ -496,7 +496,20 @@ class ClusterResolverTest(unittest.TestCase):
     ]
     self.assertCountEqual(expected, service_workers)
 
+  def test_healthy_sea_service_cluster(self):
+    pass
 
+  def test_unhealthy_pod_service_cluster(self):
+    pass
+  
+  def test_unhealthy_sea_service_cluster(self):
+    pass
+
+  def test_healthy_cluster(self):
+    pass
+
+  def test_unhealthy_cluster(self):
+    pass
 
 
 if __name__ == '__main__':
