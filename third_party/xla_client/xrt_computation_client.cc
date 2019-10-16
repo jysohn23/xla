@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <functional>
+#include <iterator>
 #include <list>
 #include <sstream>
 #include <unordered_map>
@@ -201,6 +202,25 @@ XrtComputationClient::XrtComputationClient(
   session_cache_ = absl::make_unique<XrtSessionCache>(
       config, [this](XrtSession* s) { InitSession(s); });
   alloc_session_cache_ = absl::make_unique<XrtSessionCache>(config, nullptr);
+
+  TF_VLOG(3) << "ConfigProto: " << config.DebugString();
+  // DEBUG
+  TF_VLOG(3) << "Options.default_device: " << options_.default_device;
+  TF_VLOG(3) << "Options.global_device_map: {";
+  for (const auto& dev_target : options_.global_device_map) {
+    TF_VLOG(3) << "\t" << dev_target.first << ": " << dev_target.second;
+  }
+  TF_VLOG(3) << "}";
+  TF_VLOG(3) << "Options.devices: {";
+  for (const auto device_name : options_.devices) {
+    TF_VLOG(3) << device_name;
+  }
+  TF_VLOG(3) << "}";
+  for (auto& worker_target : options_.workers_map) {
+    TF_VLOG(3) << "Worker " << worker_target.second
+                 << " for /job:" << worker_target.first.name
+                 << "/replica:0/task:" << worker_target.first.task_no;
+  }
 
   auto default_device_target =
       options_.global_device_map.find(options_.default_device);
