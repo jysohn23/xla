@@ -63,20 +63,42 @@ bool IsLocalDevice(
   }
   string mp_device = XrtComputationClient::GetMultiProcessingDevice();
   if (mp_device.empty()) {
+    // We never hit this branch in any case
+    TF_VLOG(3) << "IsLocalDevice mp_device: EMPTY";
     return true;
+  } else {
+    TF_VLOG(3) << "IsLocalDevice mp_device: " << mp_device;
   }
+  // ex. mp_device = 'TPU:16'
   Device device = ParseDevice(mp_device);
-  return device.ordinal == parsed_device.id &&
+  // ex. device.type = 'TPU', device.id = 16
+  TF_VLOG(3) << "IsLocalDevice compare_mp: "
+             << "device.ordinal=" << device.ordinal << "|"
+             << "device.kind=" << device.kind << ", "
+             << "parsed_device.id=" << parsed_device.id << "|"
+             << "parsed_device.type=" << parsed_device.type;
+  // This comparison always returns false when on non-0 host
+  const int devices_per_worker = sys_util::GetEnvInt("TPU_NUM_DEVICES", 8);
+  return device.ordinal ==
+             (devices_per_worker * parsed_device.task + parsed_device.id) &&
          device.kind == parsed_device.type;
 }
 
 void PopulateLocalDevices(XrtComputationClient::Options* options) {
   string local_worker = sys_util::GetEnvString("XRT_LOCAL_WORKER", "");
+  TF_VLOG(3) << "local_worker: " << local_worker;
   XrtComputationClient::Worker worker("", -1);
   if (!local_worker.empty()) {
     worker = ParseWorker(local_worker);
   }
+  TF_VLOG(3) << "Worker: " << worker.name << ", " << worker.task_no;
   std::map<string, int> min_ordinals;
+
+  TF_VLOG(3) << "Options.global_device_map: {";
+  for (const auto& dev_target : options->global_device_map) {
+    TF_VLOG(3) << "\t" << dev_target.first << ": " << dev_target.second;
+  }
+
   for (auto& device_xrt_device : options->global_device_map) {
     if (worker.task_no >= 0) {
       tensorflow::DeviceNameUtils::ParsedName parsed_device;
@@ -86,24 +108,50 @@ void PopulateLocalDevices(XrtComputationClient::Options* options) {
                 parsed_device.has_id && parsed_device.has_type)
           << device_xrt_device.second;
       if (!IsLocalDevice(worker, parsed_device)) {
+        // 100% of the time of non-0 host we hit this branch so we never even
+        // find
+        TF_VLOG(3) << "Is NOT LocalDevice(worker=" << worker.name << "|"
+                   << worker.task_no << ", "
+                   << "parsed_device=" << parsed_device.job << "|"
+                   << parsed_device.task << "|" << parsed_device.id << "|"
+                   << parsed_device.type << ")";
         continue;
+      } else {
+        TF_VLOG(3) << "ISLocalDevice(worker=" << worker.name << "|"
+                   << worker.task_no << ", "
+                   << "parsed_device=" << parsed_device.job << "|"
+                   << parsed_device.task << "|" << parsed_device.id << "|"
+                   << parsed_device.type << ")";
       }
     }
     options->devices.insert(device_xrt_device.first);
 
     Device global_device = ParseDevice(device_xrt_device.first);
     auto it = min_ordinals.find(global_device.kind);
+    TF_VLOG(3) << "finding in min_ordinals global_device.kind: " << global_device.kind;
     if (it == min_ordinals.end()) {
+      TF_VLOG(3) << "it == min_ordinals.end() emplacing..";
       min_ordinals.emplace(global_device.kind, global_device.ordinal);
     } else {
+      TF_VLOG(3) << "it != min_ordinals.end() ";
       it->second = std::min<int>(it->second, global_device.ordinal);
+      // TODO: maybe we need to emplace here too?
     }
   }
+  // min_ordinals empty for non 0 hosts.
+  TF_VLOG(3) << "min_ordinals after: {";
+  for (auto& ordinal : min_ordinals) {
+    TF_VLOG(3) << "\t" << ordinal.first << ": " << ordinal.second;
+  }
+  TF_VLOG(3) << "}";
   for (auto kind : {"TPU", "GPU", "CPU"}) {
     auto it = min_ordinals.find(kind);
     if (it != min_ordinals.end()) {
       options->default_device = absl::StrCat(kind, ":", it->second);
       break;
+    } else {
+      // This branch is consistently hit for non 0 hosts.
+      TF_VLOG(3) << "debug => did not find device kind: " << kind;
     }
   }
 }
@@ -220,6 +268,8 @@ std::unique_ptr<ComputationClient> ComputationClient::Create() {
                                   MakeGrpcEndPoint(parts[1]));
     }
   }
+  // There is a problem somewhere in PopulateLocalDevices where the
+  // options.default_device doesn't get populated for n>0 local workers/hosts.
   PopulateLocalDevices(&options);
   return std::unique_ptr<ComputationClient>(
       new XrtComputationClient(options, std::move(topology_proto)));

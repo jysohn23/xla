@@ -213,7 +213,7 @@ XrtComputationClient::XrtComputationClient(
   TF_VLOG(3) << "}";
   TF_VLOG(3) << "Options.devices: {";
   for (const auto device_name : options_.devices) {
-    TF_VLOG(3) << device_name;
+    TF_VLOG(3) << "\t" << device_name;
   }
   TF_VLOG(3) << "}";
   for (auto& worker_target : options_.workers_map) {
