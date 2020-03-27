@@ -4,7 +4,8 @@ SUPPORTED_MODELS = [
     'alexnet', 'densenet121', 'densenet161', 'densenet169', 'densenet201',
     'inception_v3', 'resnet101', 'resnet152', 'resnet18', 'resnet34',
     'resnet50', 'squeezenet1_0', 'squeezenet1_1', 'vgg11', 'vgg11_bn', 'vgg13',
-    'vgg13_bn', 'vgg16', 'vgg16_bn', 'vgg19', 'vgg19_bn'
+    'vgg13_bn', 'vgg16', 'vgg16_bn', 'vgg19', 'vgg19_bn', 'resnext50_32x4d',
+    'resnext101_32x4d', 'resnext101_32x8d', 'resnext101_32x48d',
 ]
 
 MODEL_OPTS = {
@@ -53,6 +54,7 @@ import torch_xla.utils.utils as xu
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.xla_multiprocessing as xmp
 import torch_xla.test.test_utils as test_utils
+import numpy as np
 
 DEFAULT_KWARGS = dict(
     batch_size=128,
@@ -72,7 +74,39 @@ MODEL_SPECIFIC_DEFAULTS = {
                 'lr_scheduler_divide_every_n_epochs': 20,
                 'lr_scheduler_divisor': 5,
                 'lr_scheduler_type': 'WarmupAndExponentialDecayScheduler',
-            })
+            }),
+    'resnext50_32x4d':
+        dict(
+            DEFAULT_KWARGS, **{
+                'lr': 0.5,
+                'lr_scheduler_divide_every_n_epochs': 20,
+                'lr_scheduler_divisor': 5,
+                'lr_scheduler_type': 'WarmupAndExponentialDecayScheduler',
+            }),
+    'resnext101_32x4d':
+        dict(
+            DEFAULT_KWARGS, **{
+                'lr': 0.5,
+                'lr_scheduler_divide_every_n_epochs': 20,
+                'lr_scheduler_divisor': 5,
+                'lr_scheduler_type': 'WarmupAndExponentialDecayScheduler',
+            }),
+    'resnext101_32x8d':
+        dict(
+            DEFAULT_KWARGS, **{
+                'lr': 0.5,
+                'lr_scheduler_divide_every_n_epochs': 20,
+                'lr_scheduler_divisor': 5,
+                'lr_scheduler_type': 'WarmupAndExponentialDecayScheduler',
+            }),
+    'resnext101_32x48d':
+        dict(
+            DEFAULT_KWARGS, **{
+                'lr': 0.5,
+                'lr_scheduler_divide_every_n_epochs': 20,
+                'lr_scheduler_divisor': 5,
+                'lr_scheduler_type': 'WarmupAndExponentialDecayScheduler',
+            }),
 }
 
 # Set any args that were not explicitly given by the user.
@@ -94,6 +128,8 @@ def get_model_property(key):
       },
   }
   model_fn = model_properties.get(FLAGS.model, default_model_property)[key]
+  if key == 'model_fn':
+    print(f'model_fn = {model_fn}')
   return model_fn
 
 
@@ -171,7 +207,10 @@ def train_imagenet():
   torch.manual_seed(42)
 
   device = xm.xla_device()
-  model = get_model_property('model_fn')().to(device)
+  model = get_model_property('model_fn')()
+  print('Model Size: {}'.format(
+    sum([np.prod(p.size()) for p in model.parameters()])))
+  model = model.to(device)
   writer = None
   if xm.is_master_ordinal():
     writer = test_utils.get_summary_writer(FLAGS.logdir)
