@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "test/test_train_mp_imagenet.py", line 44, in <module>
+    import schedulers
+  File "/home/jysohn/git/jysohn23/pytorch/xla/test/schedulers.py", line 2, in <module>
+    import torch_xla.test.test_utils as test_utils
+  File "/home/jysohn/git/jysohn23/pytorch/xla/torch_xla/__init__.py", line 41, in <module>
+    import _XLAC
+ImportError: /home/jysohn/anaconda3/envs/pytorch/lib/python3.6/site-packages/torch_xla-1.6-py3.6-linux-x86_64.egg/_XLAC.cpython-36m-x86_64-linux-gnu.so: undefined symbol: _ZNR3c106Module4implEPKcONS_11CppFunctionE

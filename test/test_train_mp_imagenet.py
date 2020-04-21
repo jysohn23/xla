@@ -4,7 +4,8 @@ SUPPORTED_MODELS = [
     'alexnet', 'densenet121', 'densenet161', 'densenet169', 'densenet201',
     'inception_v3', 'resnet101', 'resnet152', 'resnet18', 'resnet34',
     'resnet50', 'squeezenet1_0', 'squeezenet1_1', 'vgg11', 'vgg11_bn', 'vgg13',
-    'vgg13_bn', 'vgg16', 'vgg16_bn', 'vgg19', 'vgg19_bn'
+    'vgg13_bn', 'vgg16', 'vgg16_bn', 'vgg19', 'vgg19_bn', 'resnext50_32x4d',
+    'resnext101_32x8d',
 ]
 
 MODEL_OPTS = {
@@ -75,6 +76,14 @@ MODEL_SPECIFIC_DEFAULTS = {
                 'lr_scheduler_divide_every_n_epochs': 20,
                 'lr_scheduler_divisor': 5,
                 'lr_scheduler_type': 'WarmupAndExponentialDecayScheduler',
+            }),
+    'resnext101_32x8d':
+        dict(
+            DEFAULT_KWARGS, **{
+                'lr': 0.5,
+                'lr_scheduler_divide_every_n_epochs': 20,
+                'lr_scheduler_divisor': 5,
+                'lr_scheduler_type': 'WarmupAndExponentialDecayScheduler',
             })
 }
 
@@ -97,6 +106,8 @@ def get_model_property(key):
       },
   }
   model_fn = model_properties.get(FLAGS.model, default_model_property)[key]
+  if key == 'model_fn':
+    xm.master_print(f'model_fn = {model_fn}')
   return model_fn
 
 
@@ -174,7 +185,10 @@ def train_imagenet():
   torch.manual_seed(42)
 
   device = xm.xla_device()
-  model = get_model_property('model_fn')().to(device)
+  model = get_model_property('model_fn')()
+  xm.master_print('Model Size: {}'.format(
+    sum([np.prod(p.size()) for p in model.parameters()])))
+  model = model.to(device)
   writer = None
   if xm.is_master_ordinal():
     writer = test_utils.get_summary_writer(FLAGS.logdir)
