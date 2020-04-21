@@ -24,6 +24,9 @@ MODEL_OPTS = {
     '--lr_scheduler_divisor': {
         'type': int,
     },
+    '--test_only_at_end': {
+        'action': 'store_true',
+    },
 }
 
 FLAGS = args_parse.parse_common_options(
@@ -223,24 +226,31 @@ def train_imagenet():
     accuracy = xm.mesh_reduce('test_accuracy', accuracy, np.mean)
     return accuracy
 
+  def test(epoch):
+    para_loader = pl.ParallelLoader(test_loader, [device])
+    accuracy = test_loop_fn(para_loader.per_device_loader(device), epoch)
+    xm.master_print('Epoch {} test end {}, Accuracy={:.2f}'.format(
+        epoch, test_utils.now(), accuracy))
+    test_utils.write_to_summary(
+        writer,
+        epoch,
+        dict_to_write={'Accuracy/test': accuracy},
+        write_xla_metrics=True)
+    return accuracy
+
   accuracy, max_accuracy = 0.0, 0.0
   for epoch in range(1, FLAGS.num_epochs + 1):
     xm.master_print('Epoch {} train begin {}'.format(epoch, test_utils.now()))
     para_loader = pl.ParallelLoader(train_loader, [device])
     train_loop_fn(para_loader.per_device_loader(device), epoch)
     xm.master_print('Epoch {} train end {}'.format(epoch, test_utils.now()))
-    para_loader = pl.ParallelLoader(test_loader, [device])
-    accuracy = test_loop_fn(para_loader.per_device_loader(device), epoch)
-    xm.master_print('Epoch {} test end {}, Accuracy={:.2f}'.format(
-        epoch, test_utils.now(), accuracy))
-    max_accuracy = max(accuracy, max_accuracy)
-    test_utils.write_to_summary(
-        writer,
-        epoch,
-        dict_to_write={'Accuracy/test': accuracy},
-        write_xla_metrics=True)
+    if not FLAGS.test_only_at_end:
+      max_accuracy = max(max_accuracy, test(epoch))
     if FLAGS.metrics_debug:
       xm.master_print(met.metrics_report())
+
+  if FLAGS.test_only_at_end:
+    max_accuracy = max(max_accuracy, test(FLAGS.num_epochs))
 
   test_utils.close_summary_writer(writer)
   xm.master_print('Max Accuracy: {:.2f}%'.format(max_accuracy))
