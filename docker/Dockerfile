@@ -10,6 +10,7 @@ ARG release_version="nightly"
 ARG cuda="0"
 ARG cuda_compute="7.0,7.5"
 ARG cxx_abi="0"
+ARG bazel_cache_gcs_bucket=""
 
 RUN apt-get update
 RUN apt-get install -y git sudo python-pip python3-pip
@@ -24,6 +25,7 @@ ENV TF_CUDA_COMPUTE_CAPABILITIES "${cuda_compute}"
 
 # Whether the build is running on GCB
 ENV CLOUD_BUILD "${cloud_build}"
+ENV BAZEL_CACHE_GCS_BUCKET "${bazel_cache_gcs_bucket}"
 
 # Whether to build torch and torch_xla libraries with CXX ABI
 ENV CXX_ABI "${cxx_abi}"
@@ -37,9 +39,10 @@ RUN if [ "${cloud_build}" = true ]; then github_branch="${release_version}" && \
   if [ "${release_version}" = "nightly" ]; then github_branch="master"; fi && \
   cd /pytorch && \
   rm -rf xla && \
-  git clone -b "${github_branch}" --recursive https://github.com/pytorch/xla && \
+  git clone -b bazel-gcs-cache --recursive https://github.com/jysohn23/xla && \
   cd / && \
   git clone -b "${github_branch}" --recursive https://github.com/pytorch-tpu/examples tpu-examples; fi
+  #git clone -b "${github_branch}" --recursive https://github.com/pytorch/xla && \
 
 RUN cd /pytorch && bash xla/scripts/build_torch_wheels.sh ${python_version} ${release_version}
 

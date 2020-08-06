@@ -103,6 +103,12 @@ function install_bazel() {
   rm -f "$BAZEL_FILE"
   popd
   export PATH="$PATH:$HOME/bin"
+
+  pushd xla
+  # Use gcs cache to build when available
+  if [ -z ${BAZEL_CACHE_GCS_BUCKET} ]; then
+    sed -i "/bazel build/ a --remote_http_cache=https://storage.googleapis.com/${BAZEL_CACHE_GCS_BUCKET} --google_default_credentials \\" build_torch_xla_libs.sh
+  fi
 }
 
 function debian_version {
