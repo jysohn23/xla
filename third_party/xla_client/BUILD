@@ -63,6 +63,8 @@ tf_cc_shared_object(
         "//tensorflow/core:lib",
         "//tensorflow/core/platform/cloud:gcs_file_system",
         "@com_google_absl//absl/strings",
+        "//tensorflow/core/profiler/rpc/client:capture_profile",
+        "//tensorflow/core/profiler/rpc/client:profiler_client",
     ],
 )
 

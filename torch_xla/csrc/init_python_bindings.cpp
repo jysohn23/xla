@@ -20,6 +20,13 @@
 #include "tensorflow/core/example/example.pb.h"
 #include "tensorflow/core/example/feature.pb.h"
 #include "tensorflow/core/platform/env.h"
+
+#include "absl/strings/numbers.h"
+#include "absl/strings/string_view.h"
+#include "tensorflow/core/profiler/rpc/client/capture_profile.h"
+#include "tensorflow/core/profiler/profiler_options.pb.h"
+#include "tensorflow/core/profiler/lib/profiler_session.h"
+
 #include "torch/csrc/autograd/utils/wrap_outputs.h"
 #include "torch/csrc/autograd/variable.h"
 #include "torch/csrc/jit/python/pybind.h"
@@ -36,6 +43,9 @@
 #include "torch_xla/csrc/torch_util.h"
 #include "torch_xla/csrc/version.h"
 #include "torch_xla/csrc/xla_op_builder.h"
+
+// Profiler gives grace after profiling duration to terminate.
+constexpr absl::Duration kMinSessionGraceTime = absl::Seconds(60);
 
 namespace torch_xla {
 namespace {
@@ -536,6 +546,170 @@ void RemoveTfFile(const std::string& path) {
   XLA_CHECK_OK(env->DeleteFile(path));
 }
 
+tensorflow::Status ValidateHostPortPair(absl::string_view host_port) {
+  tensorflow::uint32 port;
+  std::vector<absl::string_view> parts = absl::StrSplit(host_port, ':');
+  // Must be host:port, port must be a number, host must not contain a '/',
+  // host also must not be empty.
+  if (parts.size() != 2 || !absl::SimpleAtoi(parts[1], &port) ||
+      absl::StrContains(parts[0], "/") || parts[0].empty()) {
+    return tensorflow::errors::InvalidArgument(
+        "Could not interpret \"", host_port, "\" as a host-port pair.");
+  }
+  return tensorflow::Status::OK();
+}
+
+// Sets gRPC deadline to a grace period based on the profiling duration.
+void UpdateMaxSessionDuration(
+  tensorflow::RemoteProfilerSessionManagerOptions& options) {
+  auto local_profiler_duration = options.profiler_options().duration_ms();
+  auto session_creation_ts = options.session_creation_timestamp_ns();
+  auto requested_start_ts = options.profiler_options().start_timestamp_ns();
+  // User only needs to set maximal session duration if the profiling duration
+  // is bounded.
+  DCHECK_GT(local_profiler_duration, 0);
+  TF_VLOG(3) << "duration_ms was given as " << local_profiler_duration;
+  // Max session duration is the profiling session with grace time.
+  auto profile_duration = std::max(
+      kMinSessionGraceTime, absl::Milliseconds(local_profiler_duration) * 2);
+  absl::Duration delay_duration;
+  // When requested start timestamp is 0, profiling starts immediately.
+  if (requested_start_ts > 0) {
+    delay_duration =
+        absl::Nanoseconds(requested_start_ts - session_creation_ts);
+  }
+
+  auto max_session_duration = profile_duration + delay_duration;
+  options.set_max_session_duration_ms(
+      absl::ToInt64Milliseconds(max_session_duration));
+  TF_VLOG(1) << "max_session_duration set to " << max_session_duration;
+}
+
+void AddServiceAddresses(absl::string_view service_addresses,
+                         tensorflow::RemoteProfilerSessionManagerOptions* options) {
+  for (absl::string_view server : absl::StrSplit(service_addresses, ',')) {
+    options->add_service_addresses(server.data(), server.size());
+  }
+}
+
+// Takes profiler options in a py::dict and returns a
+// tensorflow::RemoteProfilerSessionManagerOptions.
+// This must be called under GIL because it reads Python objects. Reading Python
+// objects require GIL because the objects can be mutated by other Python
+// threads. In addition, Python objects are reference counted; reading py::dict
+// will increase its reference count.
+tensorflow::RemoteProfilerSessionManagerOptions GetOptionsLocked(
+  absl::string_view logdir, const py::dict& opts) {
+  tensorflow::RemoteProfilerSessionManagerOptions options;
+  *options.mutable_profiler_options() =
+      tensorflow::ProfilerSession::DefaultOptions();
+  // Store a timestamp of when this session was created. This will be the basis
+  // of gRPC deadline afterwards.
+  auto now = absl::Now();
+  options.set_session_creation_timestamp_ns(absl::ToUnixNanos(now));
+  TF_VLOG(2) << "set_session_creation_timestamp_ns set to "
+          << options.session_creation_timestamp_ns() << " [" << now << "]";
+
+  // Set the path of where to store XSpaces.
+  options.mutable_profiler_options()->set_repository_path(logdir.data(),
+                                                          logdir.size());
+  TF_VLOG(2) << "repository_path set to "
+          << options.profiler_options().repository_path();
+
+  for (const auto& kw : opts) {
+    std::string key = py::cast<std::string>(kw.first);
+    if (key == "host_tracer_level") {
+      auto value = py::cast<int>(kw.second);
+      options.mutable_profiler_options()->set_host_tracer_level(value);
+      TF_VLOG(1) << "host_tracer_level set to " << value;
+    } else if (key == "device_tracer_level") {
+      auto value = py::cast<int>(kw.second);
+      options.mutable_profiler_options()->set_device_tracer_level(value);
+      TF_VLOG(1) << "device_tracer_level set to " << value;
+    } else if (key == "python_tracer_level") {
+      auto value = py::cast<int>(kw.second);
+      options.mutable_profiler_options()->set_python_tracer_level(value);
+      TF_VLOG(1) << "python_tracer_level set to " << value;
+    } else if (key == "delay_ms") {
+      if (!kw.second.is_none()) {
+        auto value = py::cast<int>(kw.second);
+        options.set_delay_ms(value);
+        TF_VLOG(1) << "delay_ms was set to " << value;
+      }
+    } else {
+      TF_LOG(WARNING) << "Unrecognised key: " << key;
+    }
+  }
+
+  return options;
+}
+
+tensorflow::RemoteProfilerSessionManagerOptions GetOptionsLocked(
+    absl::string_view service_addresses, absl::string_view logdir,
+    absl::string_view worker_list, bool include_dataset_ops,
+    tensorflow::int32 duration_ms, py::dict opts, bool* is_cloud_tpu_session) {
+  tensorflow::RemoteProfilerSessionManagerOptions options = GetOptionsLocked(
+    logdir, opts);
+
+  // Remote profiling does not support any use cases where the following options
+  // are set by `py::dict opts`. e.g. `opts['service_addrs']` will not happen.
+  DCHECK(options.service_addresses().empty());
+  // In remote profiling, duration is always passed by value explicitly and not
+  // set in py::dict opts.
+  DCHECK_EQ(options.profiler_options().duration_ms(), 0);
+  // Because duration_ms is not set from py::dict opts, it follows that
+  // max_session_duration_ms must be unset as well.
+  DCHECK_EQ(options.max_session_duration_ms(), 0);
+
+  // Worker_list is only used for TensorBoard TPU capture cases. For a TPU
+  // cluster, service_address is the Master, which can already be found in the
+  // list of workers. These sessions will be used with the ProfileAnalysis
+  // service.
+  *is_cloud_tpu_session = !worker_list.empty();
+  AddServiceAddresses(*is_cloud_tpu_session ? worker_list : service_addresses,
+                      &options);
+
+  // Set local profiler duration and profiler session durations.
+  options.mutable_profiler_options()->set_include_dataset_ops(
+      include_dataset_ops);
+  options.mutable_profiler_options()->set_duration_ms(duration_ms);
+  UpdateMaxSessionDuration(options);
+
+  for (int idx = 0; idx < options.service_addresses_size(); ++idx) {
+    TF_VLOG(1) << "service_addr " << idx << " set to "
+            << options.service_addresses(idx);
+  }
+  TF_VLOG(1) << "include_dataset_ops set to " << include_dataset_ops;
+  TF_VLOG(1) << "duration_ms set to " << duration_ms;
+
+  return options;
+}
+
+tensorflow::Status ValidateOptions(
+    const tensorflow::RemoteProfilerSessionManagerOptions& options) {
+  if (options.service_addresses().empty()) {
+    return tensorflow::errors::InvalidArgument("No service address provided.");
+  }
+
+  if (options.profiler_options().duration_ms() == 0) {
+    return tensorflow::errors::InvalidArgument(
+        "duration_ms must be greater than zero.");
+  }
+
+  for (absl::string_view host_port : options.service_addresses()) {
+    TF_RETURN_IF_ERROR(ValidateHostPortPair(host_port));
+  }
+
+  if (options.max_session_duration_ms() <
+      options.profiler_options().duration_ms()) {
+    return tensorflow::errors::InvalidArgument(
+        "The maximum profiling session duration must be greater than or equal "
+        "to the local profiler duration.");
+  }
+
+  return tensorflow::Status::OK();
+}
+
 py::object XlaNms(const at::Tensor& boxes, const at::Tensor& scores,
                   const at::Tensor& score_threshold,
                   const at::Tensor& iou_threshold, xla::int64 output_size) {
@@ -930,6 +1104,38 @@ void InitXlaModuleBindings(py::module m) {
     NoGilSection nogil;
     RemoveTfFile(path);
   });
+
+  m.def("_profiler_trace",
+        [](const std::string& service_addr, const std::string& logdir,
+           const std::string& worker_list, bool include_dataset_ops,
+           int duration_ms, int num_tracing_attempts,
+           py::dict options) {
+          // TPU capture is true if the user sets worker_list.
+          bool is_cloud_tpu_session = false;
+          // Normalize py::dict into a well defined and validated proto.
+          tensorflow::RemoteProfilerSessionManagerOptions opts =
+              GetOptionsLocked(service_addr, logdir, worker_list, include_dataset_ops,
+                                duration_ms, options, &is_cloud_tpu_session);
+          tensorflow::Status status = ValidateOptions(opts);
+          if (!status.ok()) {
+            XLA_ERROR() << "Tracing options invalid: " << status.error_message();
+          }
+
+          {
+            // Release the lock to keep the lock scope to a minimum, and allow
+            // other threads to proceed.
+            py::gil_scoped_release release;
+            status = tensorflow::profiler::Trace(logdir, num_tracing_attempts, opts,
+                                                is_cloud_tpu_session);
+          }
+          if (!status.ok()) {
+            XLA_ERROR() << "Tracing options invalid: " << status.error_message();
+          }
+        },
+        py::arg("service_addr"), py::arg("logdir"), py::arg("worker_list") = "",
+        py::arg("include_dataset_ops") = false,
+        py::arg("duration_ms") = 1000, py::arg("num_tracing_attempts") = 3,
+        py::arg("options") = {});
 
   py::class_<xla::XlaBuilder, op_builder::BuilderPtr>(m, "XlaBuilder");
   py::class_<op_builder::Op, op_builder::OpPtr>(m, "XlaOp");
