@@ -1,6 +1,7 @@
 from __future__ import division
 from __future__ import print_function
 
+from collections import deque
 from six import iteritems, itervalues
 import threading
 import torch
@@ -15,6 +16,8 @@ class PerDeviceQueue(object):
 
   def __init__(self, device, loader_prefetch_size, device_prefetch_size):
     self.device = device
+    #self.loader_queue = deque([], loader_prefetch_size)
+    #self.queue = deque([], device_prefetch_size)
     self.loader_queue = kq.Queue(maxsize=loader_prefetch_size)
     self.queue = kq.Queue(maxsize=device_prefetch_size)
 
@@ -136,15 +139,22 @@ class ParallelLoader(object):
     data_iter = enumerate(self._loader)
     batch = []
     while not self._done:
-      try:
-        _, data = next(data_iter)
-      except StopIteration:
-        break
-      batch.append(data)
-      if len(batch) == len(self._devices):
-        for queue_no, device_batch in enumerate(batch):
-          queues[queue_no].loader_queue.put(device_batch)
-        batch = []
+      with xp.Trace('_loader_worker:build_batches'):
+        try:
+          _, data = next(data_iter)
+        except StopIteration:
+          break
+        batch.append(data)
+
+      with xp.Trace('_loader_worker:put_batches'):
+        if len(batch) == len(self._devices):
+          for queue_no, device_batch in enumerate(batch):
+            note = f'{queue_no}'
+            if queues[queue_no].loader_queue._items.full():
+              note += '_full'
+            with xp.Trace(f'_loader_worker:put_batch_{note}'):
+              queues[queue_no].loader_queue.put(device_batch)
+          batch = []
     for dqueue in queues:
       dqueue.loader_queue.close_write()
 
@@ -160,12 +170,19 @@ class ParallelLoader(object):
   def _worker(self, dqueue):
     device = torch.device(dqueue.device)
     while True:
-      batch = self._get_batch(dqueue)
-      if not batch:
-        break
-      batch = xm.send_cpu_data_to_device(batch, device)
-      for data in batch:
-        dqueue.queue.put(data)
+      with xp.Trace('_worker:get_batch'):
+        batch = self._get_batch(dqueue)
+        if not batch:
+          break
+      with xp.Trace('_worker:send_device_data'):
+        batch = xm.send_cpu_data_to_device(batch, device)
+      with xp.Trace('_worker:put_device_batch'):
+        for data in batch:
+          note = f''
+          if dqueue.queue._items.full():
+            note += '_full'
+          with xp.Trace(f'_worker:put_device_batch_{note}'):
+            dqueue.queue.put(data)
     dqueue.queue.close_write()
 
 

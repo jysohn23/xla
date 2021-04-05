@@ -52,6 +52,7 @@ import torch_xla.distributed.parallel_loader as pl
 import torch_xla.utils.utils as xu
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.xla_multiprocessing as xmp
+import torch_xla.debug.profiler as xp
 import torch_xla.test.test_utils as test_utils
 
 DEFAULT_KWARGS = dict(
@@ -198,21 +199,25 @@ def train_imagenet():
       summary_writer=writer)
   loss_fn = nn.CrossEntropyLoss()
 
+  server = xp.start_server(9012)
+
   def train_loop_fn(loader, epoch):
     tracker = xm.RateTracker()
     model.train()
     for step, (data, target) in enumerate(loader):
-      optimizer.zero_grad()
-      output = model(data)
-      loss = loss_fn(output, target)
-      loss.backward()
-      xm.optimizer_step(optimizer)
-      tracker.add(FLAGS.batch_size)
-      if lr_scheduler:
-        lr_scheduler.step()
-      if step % FLAGS.log_steps == 0:
-        xm.add_step_closure(
-            _train_update, args=(device, step, loss, tracker, epoch, writer))
+      with xp.StepTrace('train_step', step_num=step):
+        with xp.Trace('graph_build'):
+          optimizer.zero_grad()
+          output = model(data)
+          loss = loss_fn(output, target)
+          loss.backward()
+        xm.optimizer_step(optimizer)
+        tracker.add(FLAGS.batch_size)
+        if lr_scheduler:
+          lr_scheduler.step()
+        if step % FLAGS.log_steps == 0:
+          xm.add_step_closure(
+              _train_update, args=(device, step, loss, tracker, epoch, writer))
 
   def test_loop_fn(loader, epoch):
     total_samples, correct = 0, 0
@@ -229,22 +234,22 @@ def train_imagenet():
     accuracy = xm.mesh_reduce('test_accuracy', accuracy, np.mean)
     return accuracy
 
-  train_device_loader = pl.MpDeviceLoader(train_loader, device)
-  test_device_loader = pl.MpDeviceLoader(test_loader, device)
+  train_device_loader = pl.MpDeviceLoader(train_loader, device, loader_prefetch_size=32, device_prefetch_size=16)
+  test_device_loader = pl.MpDeviceLoader(test_loader, device, loader_prefetch_size=32, device_prefetch_size=16)
   accuracy, max_accuracy = 0.0, 0.0
   for epoch in range(1, FLAGS.num_epochs + 1):
     xm.master_print('Epoch {} train begin {}'.format(epoch, test_utils.now()))
     train_loop_fn(train_device_loader, epoch)
     xm.master_print('Epoch {} train end {}'.format(epoch, test_utils.now()))
-    accuracy = test_loop_fn(test_device_loader, epoch)
-    xm.master_print('Epoch {} test end {}, Accuracy={:.2f}'.format(
-        epoch, test_utils.now(), accuracy))
-    max_accuracy = max(accuracy, max_accuracy)
-    test_utils.write_to_summary(
-        writer,
-        epoch,
-        dict_to_write={'Accuracy/test': accuracy},
-        write_xla_metrics=True)
+#    accuracy = test_loop_fn(test_device_loader, epoch)
+#    xm.master_print('Epoch {} test end {}, Accuracy={:.2f}'.format(
+#        epoch, test_utils.now(), accuracy))
+#    max_accuracy = max(accuracy, max_accuracy)
+#    test_utils.write_to_summary(
+#        writer,
+#        epoch,
+#        dict_to_write={'Accuracy/test': accuracy},
+#        write_xla_metrics=True)
     if FLAGS.metrics_debug:
       xm.master_print(met.metrics_report())
 

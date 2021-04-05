@@ -27,6 +27,8 @@
 #include "tensorflow/core/profiler/lib/traceme.h"
 #include "tensorflow/core/tpu/tpu_api_dlsym_initializer.h"
 #include "tensorflow/core/util/device_name_utils.h"
+#include "tensorflow/core/platform/stacktrace.h"
+
 
 namespace xla {
 namespace {
@@ -399,6 +401,10 @@ XrtComputationClient::TransferToServerInternal(
     mwait->Wait();
   }
   OutboundDataMetric()->AddSample(total_size);
+
+//  if (total_size == 4) {
+//    std::cout << "DEBUG (4B TRANSFER) STACK: " << tensorflow::CurrentStackTrace();
+//  }
 
   mwait->Reset(session_work_map.size());
   std::vector<DataPtr> results(tensors.size());

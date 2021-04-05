@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import collections
+import queue
 import threading
 
 
@@ -66,21 +67,28 @@ class Queue(QueueBase):
 
   def __init__(self, maxsize=1024):
     super(Queue, self).__init__(maxsize=maxsize)
-    self._items = collections.deque()
+    #self._items = collections.deque()
+    self._items = queue.Queue(maxsize=maxsize)
 
   def put(self, item):
-    with self._lock:
-      while (len(self._items) >= self._maxsize and not self._close_read):
-        self._space_available_cv.wait()
-      if not self._close_read:
-        self._items.append(item)
-        self._ready_cv.notify()
+    self._items.put(item)
 
   def get(self):
-    with self._lock:
-      while not self._items and not self._close_write:
-        self._ready_cv.wait()
-      item = self._items.popleft() if self._items else None
-      if item is not None:
-        self._space_available_cv.notify()
-      return item
+    return self._items.get()
+
+#  def put(self, item):
+#    with self._lock:
+#      while (len(self._items) >= self._maxsize and not self._close_read):
+#        self._space_available_cv.wait()
+#      if not self._close_read:
+#        self._items.append(item)
+#        self._ready_cv.notify()
+#
+#  def get(self):
+#    with self._lock:
+#      while not self._items and not self._close_write:
+#        self._ready_cv.wait()
+#      item = self._items.popleft() if self._items else None
+#      if item is not None:
+#        self._space_available_cv.notify()
+#      return item

@@ -134,6 +134,8 @@
 #include "torch_xla/csrc/tensor_ops.h"
 #include "torch_xla/csrc/tensor_util.h"
 
+#include "torch_xla/csrc/python_util.h"
+
 namespace torch_xla {
 namespace {
 
@@ -532,6 +534,7 @@ XLATensor XLATensor::add(const XLATensor& input, const XLATensor& other,
 
 void XLATensor::add_(XLATensor& input, const XLATensor& other,
                      const at::Scalar& alpha) {
+  //std::cout << "DEBUG PYTHON STACK: " << torch_xla::GetPythonFrames();
   ir::Value constant =
       GetIrValueForScalar(alpha, other.shape(), input.GetDevice());
   input.SetInPlaceIrValue(input.GetIrValue() + other.GetIrValue() * constant);
