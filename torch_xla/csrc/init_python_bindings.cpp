@@ -48,6 +48,8 @@
 #include "torch_xla/csrc/version.h"
 #include "torch_xla/csrc/xla_op_builder.h"
 
+#include "tensorflow/compiler/xla/xla_client/tf_logging.h"
+
 namespace torch_xla {
 namespace {
 
@@ -241,6 +243,7 @@ void SyncLiveTensors(const std::string& device_str,
 
 void StepMarker(const std::string& device_str,
                 const std::vector<std::string>& devices, bool wait) {
+  std::cerr << "@@StepMarker\n";
   tensorflow::profiler::TraceMe activity(
       "StepMarker", tensorflow::profiler::TraceMeLevel::kInfo);
   Device device = GetDeviceOrCurrent(device_str);
@@ -925,6 +928,7 @@ void InitXlaModuleBindings(py::module m) {
         [](const std::string& device, const std::vector<std::string>& devices,
            bool wait) {
           NoGilSection nogil;
+          std::cerr << "@@_XLAC._xla_step_marker\n";
           StepMarker(device, devices, wait);
         },
         py::arg("device") = "", py::arg("devices"), py::arg("wait") = true);
@@ -1086,6 +1090,14 @@ void InitXlaModuleBindings(py::module m) {
         });
   m.def("_run_xrt_local_service", [](xla::uint64 service_port) {
     xla::ComputationClient::RunLocalService(service_port);
+  });
+
+  m.def("_xla_set_sharding", []() {
+    // We may want to first set the sharding configs here before actually
+    // calling mark_step since that is too late, as we need it at the time of
+    // tracing the IR graph since xla::Parameter used in `InferOutputShape` for
+    // NodeOutputShape inference uses `bulider`.
+    return;
   });
 
   BuildProfilerSubmodule(&m);

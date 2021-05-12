@@ -1008,10 +1008,17 @@ const std::string& XrtComputationClient::TorchDeviceToXrtDevice(
 std::unique_ptr<xrt::XLAComputation> XrtComputationClient::CreateXrtComputation(
     const XlaComputation& computation, absl::Span<const std::string> devices,
     const Shape* output_shape) const {
+  TF_VLOG(0) << "\nLOGGING NEW BUILD\n";
   std::unique_ptr<xrt::XLAComputation> xrt_computation(
       new xrt::XLAComputation());
   auto config = xrt_computation->mutable_config();
-  config->set_num_cores_per_replica(1);
+  // config->set_num_cores_per_replica(1);
+
+  // HACK START
+  config->set_num_cores_per_replica(2);
+  config->set_use_spmd_for_xla_partitioning(true);
+  // HACK END
+
   if (devices.size() > 1) {
     auto device_assignment = config->mutable_device_assignment();
     auto computation_device = device_assignment->add_computation_devices();

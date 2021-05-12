@@ -40,6 +40,8 @@
 #include "torch_xla/csrc/tensor_util.h"
 #include "torch_xla/csrc/torch_util.h"
 
+#include "tensorflow/compiler/xla/xla_data.pb.h"
+
 namespace torch_xla {
 namespace {
 
@@ -1509,6 +1511,19 @@ XLATensor::CompilationResult XLATensor::Compile(
   ir::LoweringContext lowering_ctx("SyncTensorsGraph", coll.device,
                                    po_data->post_order,
                                    std::move(po_data->emission_map));
+
+  // // Dumb prototype carpet-bombing with OpSharding config.
+  // xla::OpSharding sharding = xla::OpSharding();
+  // sharding.set_type(xla::OpSharding::OTHER);
+  // sharding.add_tile_assignment_dimensions(1);
+  // sharding.add_tile_assignment_dimensions(2);
+  // sharding.add_tile_assignment_devices(0);
+  // sharding.add_tile_assignment_devices(1);
+  // // sharding.set_tile_assignment_dimensions();
+  // // sharding.set_tile_assignment_devices();
+  // TF_VLOG(1) << "xla::OpSharding: " << sharding.DebugString();
+  // lowering_ctx.builder()->SetSharding(sharding);
+
   for (auto index : coll.indices) {
     ir::Value ir_value = tensors[index].CurrentIrValue();
     xla::XlaOp root = lowering_ctx.GetOutputOp(ir_value);

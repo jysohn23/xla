@@ -7,6 +7,9 @@
 #include "torch_xla/csrc/lowering_context.h"
 #include "torch_xla/csrc/ops/infer_output_shape.h"
 
+#include "tensorflow/compiler/xla/xla_client/tf_logging.h"
+#include "tensorflow/core/platform/stacktrace.h"
+
 namespace torch_xla {
 namespace ir {
 namespace ops {
@@ -84,6 +87,9 @@ NodePtr ConvolutionOverrideable::Clone(OpList operands) const {
 }
 
 XlaOpVector ConvolutionOverrideable::Lower(LoweringContext* loctx) const {
+  TF_VLOG(1) << __PRETTY_FUNCTION__ << " @@stacktrace:\n"
+    << tensorflow::CurrentStackTrace() << "\n";
+
   xla::XlaOp input = loctx->GetOutputOp(operand(0));
   xla::XlaOp kernel = loctx->GetOutputOp(operand(1));
   xla::XlaOp output;
