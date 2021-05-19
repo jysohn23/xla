@@ -1011,7 +1011,16 @@ std::unique_ptr<xrt::XLAComputation> XrtComputationClient::CreateXrtComputation(
   std::unique_ptr<xrt::XLAComputation> xrt_computation(
       new xrt::XLAComputation());
   auto config = xrt_computation->mutable_config();
-  config->set_num_cores_per_replica(1);
+
+  if (device_assignment_) {
+    config->set_num_cores_per_replica(device_assignment_->computation_count());
+  } else {
+    config->set_num_cores_per_replica(1);
+  }
+  config->set_use_spmd_partitioning(use_spmd_partitioning_);
+
+  // TODO: populate device assigment with the above even if devices.size <= 1.
+
   if (devices.size() > 1) {
     auto device_assignment = config->mutable_device_assignment();
     auto computation_device = device_assignment->add_computation_devices();
@@ -1043,6 +1052,7 @@ std::unique_ptr<xrt::XLAComputation> XrtComputationClient::CreateXrtComputation(
     *config->mutable_program_shape()->mutable_result() =
         output_shape->ToProto();
   }
+  TF_VLOG(0) << "xrt::XLAComputation.config: " << config->DebugString();
   *xrt_computation->mutable_hlo_snapshot() =
       std::move(*computation.Snapshot().ConsumeValueOrDie());
   return xrt_computation;
@@ -1479,6 +1489,16 @@ void XrtComputationClient::SetReplicationDevices(
     std::shared_ptr<std::vector<std::string>> devices) {
   std::lock_guard<std::mutex> lock(lock_);
   replication_devices_ = std::move(devices);
+}
+
+void XrtComputationClient::SetUseSpmdPartitioning(bool use_spmd_partitioning) {
+  use_spmd_partitioning_ = use_spmd_partitioning;
+}
+
+void XrtComputationClient::SetDeviceAssignment(
+    const xla::DeviceAssignment& device_assignment) {
+  device_assignment_ = absl::make_unique<xla::DeviceAssignment>(
+      std::move(device_assignment));
 }
 
 std::shared_ptr<std::vector<std::string>>

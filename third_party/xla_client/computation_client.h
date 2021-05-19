@@ -11,6 +11,7 @@
 #include "absl/types/optional.h"
 #include "absl/types/span.h"
 #include "tensorflow/compiler/xla/client/xla_computation.h"
+#include "tensorflow/compiler/xla/service/computation_placer.h"
 #include "tensorflow/compiler/xla/literal_util.h"
 #include "tensorflow/compiler/xla/types.h"
 #include "tensorflow/compiler/xla/xla_client/metrics.h"
@@ -248,6 +249,11 @@ class ComputationClient {
   virtual std::shared_ptr<std::vector<std::string>> GetReplicationDevices() = 0;
 
   virtual void SetRngSeed(size_t seed) = 0;
+
+  virtual void SetUseSpmdPartitioning(bool use_spmd_partitioning) = 0;
+
+  virtual void SetDeviceAssignment(
+      const xla::DeviceAssignment& device_assignment) = 0;
 
   virtual std::map<std::string, Metric> GetMetrics() const = 0;
 

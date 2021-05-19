@@ -48,6 +48,10 @@
 #include "torch_xla/csrc/version.h"
 #include "torch_xla/csrc/xla_op_builder.h"
 
+#include "tensorflow/compiler/xla/xla_client/tf_logging.h"
+#include "tensorflow/compiler/xla/xla_data.pb.h"
+#include "tensorflow/compiler/xla/service/computation_placer.h"
+
 namespace torch_xla {
 namespace {
 
@@ -241,6 +245,7 @@ void SyncLiveTensors(const std::string& device_str,
 
 void StepMarker(const std::string& device_str,
                 const std::vector<std::string>& devices, bool wait) {
+  std::cerr << "@@StepMarker\n";
   tensorflow::profiler::TraceMe activity(
       "StepMarker", tensorflow::profiler::TraceMeLevel::kInfo);
   Device device = GetDeviceOrCurrent(device_str);
@@ -707,6 +712,38 @@ void BuildProfilerSubmodule(py::module* m) {
                });
 }
 
+void BuildShardingSubmodule(py::module* m) {
+  py::module sharding = m->def_submodule("sharding", "XLA SPMD integration");
+  // py::class_<xla::OpSharding>(sharding, "OpSharding");
+  sharding.def("set_sharding", [](const std::vector<int>& sharding) {
+    // We may want to first set the sharding configs here before actually
+    // calling mark_step since that is too late, as we need it at the time of
+    // tracing the IR graph since xla::Parameter used in `InferOutputShape` for
+    // NodeOutputShape inference uses `bulider`.
+
+    // Currently we don't have sharded tensors exposed so we'll need to
+    // carpet bomb with single sharding to all ops. From sharding we also
+    // get the DeviceAssignment.
+    // 1. set sharding annotation for graphs
+    // 2. set num_cores_per_replica, use_spmd_partitioning
+    // 3. set device assignment
+
+    xla::ComputationClient::Get()->SetUseSpmdPartitioning(true);
+
+    int num_partitions = 1;
+    for (int partition : sharding) {
+      num_partitions *= partition;
+    }
+    xla::DeviceAssignment device_assignment = xla::DeviceAssignment(
+        1, num_partitions);
+    xla::ComputationClient::Get()->SetDeviceAssignment(device_assignment);
+
+    // TODO: set sharding on the XlaBuilder instance as well.
+
+  }, py::arg("sharding_spec") = xla::OpSharding());
+}
+
+
 void InitXlaModuleBindings(py::module m) {
   m.def("_initialize_aten_bindings",
         []() { AtenXlaType::InitializeAtenBindings(); });
@@ -925,6 +962,7 @@ void InitXlaModuleBindings(py::module m) {
         [](const std::string& device, const std::vector<std::string>& devices,
            bool wait) {
           NoGilSection nogil;
+          std::cerr << "@@_XLAC._xla_step_marker\n";
           StepMarker(device, devices, wait);
         },
         py::arg("device") = "", py::arg("devices"), py::arg("wait") = true);
@@ -1089,6 +1127,7 @@ void InitXlaModuleBindings(py::module m) {
   });
 
   BuildProfilerSubmodule(&m);
+  BuildShardingSubmodule(&m);
 }
 
 }  // namespace

@@ -14,6 +14,7 @@
 #include "tensorflow/cc/framework/ops.h"
 #include "tensorflow/cc/framework/scope.h"
 #include "tensorflow/cc/ops/standard_ops.h"
+#include "tensorflow/compiler/xla/service/computation_placer.h"
 #include "tensorflow/compiler/xla/xla_client/cache.h"
 #include "tensorflow/compiler/xla/xla_client/computation_client.h"
 #include "tensorflow/compiler/xla/xla_client/debug_macros.h"
@@ -199,6 +200,11 @@ class XrtComputationClient : public ComputationClient {
   static Worker ParseWorker(const std::string& worker);
 
   static std::string GetMultiProcessingDevice();
+
+  void SetUseSpmdPartitioning(bool use_spmd_partitioning) override;
+
+  void SetDeviceAssignment(
+      const xla::DeviceAssignment& device_assignment) override;
 
  private:
   // The data structure used for the key in the compilation cache. Compilations
@@ -512,6 +518,11 @@ class XrtComputationClient : public ComputationClient {
   // feeding different TPU devices in a POD (or slice) training.
   std::unique_ptr<service::MeshService> mesh_service_;
   std::shared_ptr<std::vector<std::string>> replication_devices_;
+
+  // Experimental: SPMD model parallelism features.
+  std::unique_ptr<xla::DeviceAssignment> device_assignment_;
+  bool use_spmd_partitioning_;
+  int num_cores_per_replica_ = 1;
 };
 
 }  // namespace xla

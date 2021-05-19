@@ -73,7 +73,17 @@ class HloMetadataSetter {
 }  // namespace
 
 LoweringContext::LoweringContext(const std::string& name, Device device)
-    : builder_(name), device_(std::move(device)) {}
+    : builder_(name), device_(std::move(device)) {
+  // Dumb prototype carpet-bombing with OpSharding config.
+  xla::OpSharding sharding = xla::OpSharding();
+  sharding.set_type(xla::OpSharding::OTHER);
+  sharding.add_tile_assignment_dimensions(1);
+  sharding.add_tile_assignment_dimensions(2);
+  sharding.add_tile_assignment_devices(0);
+  sharding.add_tile_assignment_devices(1);
+  builder()->SetSharding(sharding);
+  TF_VLOG(1) << "xla::OpSharding: " << builder()->sharding()->DebugString();
+}
 
 LoweringContext::LoweringContext(const std::string& name, Device device,
                                  absl::Span<const Node* const> post_order,
@@ -81,6 +91,17 @@ LoweringContext::LoweringContext(const std::string& name, Device device,
     : builder_(name),
       device_(std::move(device)),
       emit_status_(std::move(emit_status)) {
+
+  // Dumb prototype carpet-bombing with OpSharding config.
+  xla::OpSharding sharding = xla::OpSharding();
+  sharding.set_type(xla::OpSharding::OTHER);
+  sharding.add_tile_assignment_dimensions(1);
+  sharding.add_tile_assignment_dimensions(2);
+  sharding.add_tile_assignment_devices(0);
+  sharding.add_tile_assignment_devices(1);
+  builder()->SetSharding(sharding);
+  TF_VLOG(1) << "xla::OpSharding: " << builder()->sharding()->DebugString();
+
   for (auto node : post_order) {
     LowerNode(node);
   }
@@ -125,6 +146,13 @@ void LoweringContext::SetResult(size_t index, xla::XlaOp op) {
 }
 
 xla::StatusOr<xla::XlaComputation> LoweringContext::Build() {
+  auto sharding = builder()->sharding();
+  if (sharding) {
+    TF_VLOG(1) << __PRETTY_FUNCTION__ << " builder()->sharding() :"
+      << sharding->DebugString();
+  } else {
+    TF_VLOG(1) << __PRETTY_FUNCTION__ << " builder()->sharding()==nullptr";
+  }
   if (!root_tuple_.empty()) {
     xla::XlaOp root = xla::Tuple(builder(), root_tuple_);
     return builder()->Build(root);
