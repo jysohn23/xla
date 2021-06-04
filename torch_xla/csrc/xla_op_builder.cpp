@@ -15,6 +15,8 @@
 #include "torch_xla/csrc/helpers.h"
 #include "torch_xla/csrc/tensor_util.h"
 
+#include "tensorflow/compiler/xla/xla_client/tf_logging.h"
+
 namespace torch_xla {
 namespace op_builder {
 namespace {
@@ -227,6 +229,16 @@ xla::XlaOp Constant(const BuilderPtr& builder,
   xla::Literal literal =
       GetTensorLiteral(tensor, /*shape=*/nullptr, /*device=*/nullptr);
   return xla::ConstantLiteral(builder.get(), literal);
+}
+
+xla::XlaOp CustomCall(const BuilderPtr& builder,
+                      const std::vector<OpPtr>& operands,
+                      py::dict args) {
+  xla::Shape shape = PyShapeToShape(args["shape"]);
+  std::string call_target_name = args["call_target_name"].cast<std::string>();
+  auto op = xla::CustomCall(
+    builder.get(), call_target_name, {operands.at(0)->op}, shape);
+  return op;
 }
 
 xla::PaddingConfig ParsePaddingConfig(py::tuple cfg) {
@@ -753,6 +765,7 @@ const XlaOpFunctionMap* CreateXlaOpFunctionMap() {
   XLA_OPADD(ConvWithGeneralPadding);
   XLA_OPADD(Cos);
   XLA_OPADD(Cosh);
+  XLA_OPADD(CustomCall);
   XLA_OPADD(Div);
   XLA_OPADD(Dot);
   XLA_OPADD(DynamicReshape);

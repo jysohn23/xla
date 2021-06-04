@@ -680,6 +680,12 @@ class Op(object):
   def ones_like(self):
     return self.scalar_like(1)
 
+  def custom_call(self, call_target_name):
+    shape = self.shape()
+    return mkop(
+      'CustomCall', (self.op,), call_target_name=call_target_name,
+      shape=shape.shape)
+
   @classmethod
   def _extract_xla_ops(cls, ops):
     return [x.op for x in ops]

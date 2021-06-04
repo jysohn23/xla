@@ -48,6 +48,10 @@
 #include "torch_xla/csrc/version.h"
 #include "torch_xla/csrc/xla_op_builder.h"
 
+#include "tensorflow/compiler/xla/tools/hlo_module_loader.h"
+#include "tensorflow/compiler/xla/python/types.h"
+#include "tensorflow/compiler/xla/xla_data.pb.h"
+
 namespace torch_xla {
 namespace {
 
@@ -1085,6 +1089,45 @@ void InitXlaModuleBindings(py::module m) {
   m.def("_run_xrt_local_service", [](xla::uint64 service_port) {
     xla::ComputationClient::RunLocalService(service_port);
   });
+
+  // Parse HLO -> HloModule -> serialized XlaComputation proto.
+  // To be deserialized into JAX XlaComputation.
+  m.def("_hlo_text_to_serialized_xla_computation", [](const std::string& hlo){
+    std::unique_ptr<xla::HloModule> module = xla::LoadModuleFromData(
+      /*data=*/hlo, /*format=*/"hlo").ValueOrDie();
+    xla::HloModuleProto module_proto = module->ToProto();
+    xla::XlaComputation computation = xla::XlaComputation(module_proto);
+
+    std::string result;
+    // if (!computation.proto().SerializeToString(&result)) {
+    //   return xla::Unknown("Failed to serialize the HloModuleProto.");
+    // }
+    computation.proto().SerializeToString(&result);
+    return py::bytes(result);
+  });
+
+  // Set sharding on the XlaBuilder object.
+  // Note: we are using the pybind11 type_caster defined in xla/python/types.h
+  // to automatically cast from JAX's xla.OpSharding type to xla::OpSharding
+  // proto.
+  m.def("_xla_builder_set_sharding",
+        [](op_builder::BuilderPtr builder,
+           const bool replicate_on_last_tile_dim,
+           const std::vector<int>& tile_assignment_devices,
+           const std::vector<int>& tile_assignment_dimensions,
+           const int& type) {
+             xla::OpSharding sharding;
+             for (int i : tile_assignment_devices) {
+               sharding.add_tile_assignment_devices(i);
+             }
+             for (int i : tile_assignment_dimensions) {
+               sharding.add_tile_assignment_dimensions(i);
+             }
+             sharding.set_type(xla::OpSharding::Type(type));
+             sharding.set_replicate_on_last_tile_dim(
+               replicate_on_last_tile_dim);
+             builder->SetSharding(sharding);
+        });
 
   BuildProfilerSubmodule(&m);
 }
