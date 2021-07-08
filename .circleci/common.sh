@@ -103,13 +103,14 @@ function run_torch_xla_tests() {
     #   python test/test_train_mp_mnist_amp.py --fake_data
     # fi
 
-    pushd test/cpp
-    CC=clang-9 CXX=clang++-9 ./run_tests.sh
+    #pushd test/cpp
+    #echo "Running C++ Tests"
+    #CC=clang-9 CXX=clang++-9 ./run_tests.sh
 
-    if ! [ -x "$(command -v nvidia-smi)"  ]
-    then
-      CC=clang-9 CXX=clang++-9 ./run_tests.sh -X early_sync -F AtenXlaTensorTest.TestEarlySyncLiveTensors -L""
-    fi
-    popd
+    #if ! [ -x "$(command -v nvidia-smi)"  ]
+    #then
+    #  CC=clang-9 CXX=clang++-9 ./run_tests.sh -X early_sync -F AtenXlaTensorTest.TestEarlySyncLiveTensors -L""
+    #fi
+    #popd
   popd
 }
